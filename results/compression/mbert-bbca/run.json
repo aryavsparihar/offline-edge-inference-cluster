@@ -1,0 +1,131 @@
+{
+  "name": "mbert-bbca",
+  "base_model": "google-bert/bert-base-multilingual-cased",
+  "dataset": "bbca.hi",
+  "test_files": [
+    "data/public/bbca.hi/test.jsonl"
+  ],
+  "max_seq_len": 128,
+  "labels": [
+    "business",
+    "china",
+    "entertainment",
+    "india",
+    "institutional",
+    "international",
+    "learningenglish",
+    "multimedia",
+    "news",
+    "pakistan",
+    "science",
+    "social",
+    "southasia",
+    "sport"
+  ],
+  "params_fp32": 177864206,
+  "params_pruned": 158077190,
+  "finetune_history": [
+    {
+      "accuracy": 0.6705202312138728,
+      "macro_f1": 0.2464585380557273,
+      "n": 346,
+      "step": 196
+    },
+    {
+      "accuracy": 0.7225433526011561,
+      "macro_f1": 0.27294347968440424,
+      "n": 346,
+      "step": 392
+    },
+    {
+      "accuracy": 0.7167630057803468,
+      "macro_f1": 0.26823714018091926,
+      "n": 346,
+      "step": 588
+    },
+    {
+      "accuracy": 0.7543352601156069,
+      "macro_f1": 0.2847852744856361,
+      "n": 346,
+      "step": 784
+    }
+  ],
+  "recovery_history": [
+    {
+      "accuracy": 0.7312138728323699,
+      "macro_f1": 0.30707061730844387,
+      "n": 346,
+      "step": 196
+    }
+  ],
+  "val_before_pruning": {
+    "accuracy": 0.7543352601156069,
+    "macro_f1": 0.2847852744856361,
+    "n": 346
+  },
+  "val_after_pruning_no_recovery": {
+    "accuracy": 0.7514450867052023,
+    "macro_f1": 0.2831681905313289,
+    "n": 346
+  },
+  "verify": {
+    "fp32": {
+      "max_abs_diff": 3.5762786865234375e-06,
+      "argmax_agreement": 1.0
+    },
+    "pruned": {
+      "max_abs_diff": 8.106231689453125e-06,
+      "argmax_agreement": 1.0
+    }
+  },
+  "pruning": {
+    "head_ratio": 0.3,
+    "ffn_ratio": 0.2,
+    "recovery_epochs": 1.0,
+    "head_mechanism": "model.prune_heads",
+    "heads_total": 144,
+    "heads_pruned": 43,
+    "heads_remaining": {
+      "0": 9,
+      "1": 8,
+      "2": 10,
+      "3": 10,
+      "4": 11,
+      "5": 12,
+      "6": 11,
+      "7": 6,
+      "8": 5,
+      "9": 5,
+      "10": 4,
+      "11": 10
+    },
+    "ffn_keep": {
+      "0": 2458,
+      "1": 2458,
+      "2": 2458,
+      "3": 2458,
+      "4": 2458,
+      "5": 2458,
+      "6": 2458,
+      "7": 2458,
+      "8": 2458,
+      "9": 2458,
+      "10": 2458,
+      "11": 2458
+    }
+  },
+  "quantization": {
+    "per_channel": false,
+    "op_types": [
+      "MatMul",
+      "Gather"
+    ]
+  },
+  "timings": {
+    "finetune_s": 1305.9386739730835,
+    "export_fp32_s": 58.70289993286133,
+    "prune_s": 115.80083084106445,
+    "recovery_s": 310.42860198020935,
+    "export_pruned_s": 61.08565592765808
+  }
+}

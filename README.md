@@ -274,7 +274,140 @@ around `session.run`. Memory use and latency are in [Results](#results).
 
 ## Results
 
-RESULTS_PLACEHOLDER
+Every number in this section was produced by this repository's code. Raw
+outputs are in [`results/`](results/). **No Raspberry Pi was available while
+building this rebuild**, so the two latency rows are *not measured on the
+target hardware*. The numbers shown next to them come from the build machine
+and are not comparable to a Pi 4. Run `make bench` on a Pi and paste its
+table here.
+
+Build machine: MacBook Air (Apple M4, 10 cores, 16 GB, fanless), macOS,
+Python 3.11.17, onnxruntime 1.31.0, PyTorch 2.14.1 (MPS for training),
+transformers 4.57.6. Benchmarks ran with only normal desktop apps open.
+
+### Against the targets
+
+| Metric | Target | Measured | Gap to target | How measured |
+|---|---|---|---|---|
+| Model size | 1.1 GB fp32 → ~260 MB (4.2×) | **1112.4 MB → 258.9 MB (4.30×)** | met (1.1 MB under, +0.10×) | ONNX file size on disk. XLM-R base, 30% of heads + 20% of FFN neurons pruned, 1-epoch recovery fine-tune, dynamic INT8 (`MatMul`+`Gather`, per-tensor). [report](results/compression/xlmr-bbca/report.md) |
+| Accuracy | ≥ 91% of fp32 retained | **100.3% retained**: 76.21% vs 75.98% fp32 | met (+9.3 pts above the floor) | IndicGLUE `bbca.hi` held-out test split, n=866, 14 topics. The 95% CI at this n is about ±2.8 pts, so fp32 and pruned+INT8 are statistically tied. Majority-class baseline: 41.2% |
+| Classification latency | ~380 ms on a Raspberry Pi 4 | **not measured on a Pi** | unknown | Build machine only (not comparable): p50 15 ms / p95 17 ms / p99 22 ms, 64.2 req/s, peak RSS 1066 MB. Same model, max_seq_len=128 (padded), batch 1, concurrency 1, 4 intra-op threads, 60 s continuous load after 10 s warm-up. [bench](results/bench/bench-20261020-013534.md) |
+| Generative latency | ~1.2 s | **not measured on a Pi** | unknown | Definition: wall time for one response of exactly 32 new tokens (greedy, batch 1, ~40-token chat prompt), Qwen2.5-0.5B-Instruct INT8 ONNX. Build machine only: p50 1.89 s / p95 2.17 s, time-to-first-token 86 ms, 58 ms/token |
+| Sync integrity | ~99.2% | **96.14%** mean over 10 seeds (min 86.82%) after K=10 windows; **100% in every seed** after one more window without new writes | −3.06 pts at K=10 | % of records identical on all 12 replicas right after window 10, with new writes before every window. Settings: 20% loss per message, a random 2-way partition in 30% of windows (1 window long), 5% node restart per window, 6 sync rounds per window, fanout 2, 240 writes per window, clock skew up to ±5 min. [sweep](results/sim/sweep.md) |
+
+**Why sync integrity is below 99.2% at K=10:** in the seeds where a random
+partition happens to be open during window 10, records written just before
+it exist on only one side, and the metric counts them as not identical. The
+lower values all come from those seeds. Without partitions the cluster is at
+100% after every window for loss up to 30% (and 98.4% at 50% loss).
+Convergence itself never failed: all 280 simulated runs reached 100%
+identical *and* correct (every replica holds the true latest write of every
+record and counter) within at most 4 quiet windows, or 13 at 50% loss without
+retries. The simulator parameters were chosen before the first run and were
+not adjusted to approach the target.
+
+### Compression trade-offs (XLM-R base and mBERT, `bbca.hi` test, n=866)
+
+| model / pruning | heads removed | params | pruned+INT8 size | compression | test acc. (fp32 → pruned+INT8) | retained |
+|---|---|---|---|---|---|---|
+| XLM-R base, heads 30%, FFN 20% (default) | 43 / 144 | 278.1M → 258.3M | 258.9 MB | 4.30× | 75.98% → 76.21% | 100.3% |
+| XLM-R base, heads 50%, FFN 40% | 72 / 144 | 278.1M → 241.2M | 241.8 MB | 4.60× | 75.98% → 74.94% | 98.6% |
+| XLM-R base, heads 60%, FFN 50% | 86 / 144 | 278.1M → 232.8M | 233.4 MB | 4.77× | 75.98% → 76.10% | 100.2% |
+| mBERT cased, heads 30%, FFN 20% | 43 / 144 | 177.9M → 158.1M | 158.7 MB | 4.48× (from 711.7 MB) | 72.63% → 71.13% | 97.9% |
+| XLM-R base, INT8 only (no pruning) | 0 | 278.1M | 278.7 MB | 3.99× | 75.98% → 75.87% | 99.8% |
+
+Observations:
+
+* Most of the size reduction comes from INT8 on the **embedding matrix**.
+  XLM-R's 250k-token vocabulary is 69% of its parameters and head/FFN pruning
+  can't touch it. Quantizing `MatMul` only leaves the model at 836 MB.
+* Head importance is very uneven across layers. With 30% pruning, layers 0-1
+  keep all 12 heads while layers 6, 9 and 10 keep 3-4 heads
+  (`heads_remaining` in [run.json](results/compression/xlmr-bbca/run.json)).
+* Pruning alone costs little before recovery (validation 76.30% → 75.43% at
+  30%, → 72.83% at 50%), and one epoch of recovery fine-tuning restores it.
+* Exported ONNX graphs match PyTorch logits to ≤ 1.2e-5 with 100% argmax
+  agreement.
+* Fine-tuning takes about 21 minutes for 4 epochs (784 steps, batch 16, seq
+  128) on the M4 GPU for either model. Each pruning variant adds about 5
+  minutes of recovery.
+
+INT8 settings on the 30%-pruned XLM-R ([ablation](results/compression/xlmr-bbca/ablation.md)):
+
+| INT8 setting | size | test accuracy | build-machine p50 |
+|---|---|---|---|
+| per-tensor, `MatMul` + `Gather` (default) | 258.9 MB | 76.21% | 31 ms |
+| per-channel, `MatMul` + `Gather` | 259.2 MB | 75.29% | 200 ms |
+| per-tensor, `MatMul` only | 836.1 MB | 76.33% | 50 ms |
+| per-channel, `MatMul` only | 836.4 MB | 75.52% | 152 ms |
+
+Per-channel scales were slower *and* slightly less accurate here, so
+per-tensor is the default. Measure again on the Pi: ARM kernels differ. The
+ablation latencies were taken while other jobs were running and are only
+comparable within the table. The idle benchmark gave 15 ms for the default.
+
+Build-machine classification latency of the other XLM-R variants under the
+same 60 s benchmark: fp32 p50 29 ms / p95 34 ms (peak RSS 2966 MB),
+fp32+INT8 p50 26 ms / p95 30 ms (1085 MB), pruned+INT8 p50 15 ms / p95 17 ms
+(1066 MB).
+
+**What was tried and what wasn't:** pruning ratios (three settings above),
+recovery fine-tuning (1 epoch), per-channel vs per-tensor INT8, quantized op
+set (with/without `Gather`). Not tried, because their payoff is Pi latency and
+that can't be measured here: shorter `max_seq_len`, graph optimization
+levels, and intra/inter-op thread counts. All of these are flags on
+`make bench` / `bench.latency` (`--max-seq-len`, `--graph-opt`, `--threads`,
+`--concurrency`). Vocabulary trimming of the embedding matrix would shrink
+XLM-R far more than pruning, but it changes the tokenizer and wasn't in scope.
+
+### Serving and the generator
+
+* The pruned+INT8 XLM-R also ran inside the `linux/arm64` Docker image (the
+  same OS/arch/onnxruntime stack as a 64-bit Pi). It classified Hindi
+  headlines correctly (cricket → `sport` 0.97, budget → `india` 0.98) using
+  636 MiB of container memory.
+* Qwen2.5-0.5B-Instruct INT8 adds 880-920 MB RSS on load (two measurements). A test checks
+  that KV-cache decoding yields exactly the tokens of a full recompute.
+  Quality: English answers are coherent, but Hindi output mostly repeated the
+  question and Urdu output degenerated in the sample prompts
+  ([details](deploy/raspberry-pi.md#7-memory-budget-4-gb)). Treat `/generate`
+  as experimental.
+
+### Sync sweep (12 replicas, 10 seeds per cell)
+
+Full grid: [results/sim/sweep.md](results/sim/sweep.md). Mean (min) % of
+records identical on all replicas after window *k*:
+
+| setting | k=1 | k=3 | k=5 | k=10 | windows to 100% after writes stop (max) |
+|---|---|---|---|---|---|
+| loss 0–30%, no partitions | 100.00 (100.00) | 100.00 (100.00) | 100.00 (100.00) | 100.00 (100.00) | 0 |
+| loss 50%, no partitions | 100.00 (100.00) | 100.00 (100.00) | 99.68 (96.75) | 98.38 (95.79) | 1 |
+| loss 20%, 1-window partitions (default) | 80.00 (0.00) | 83.56 (45.41) | 92.72 (75.56) | 96.14 (86.82) | 1 |
+| loss 20%, 3-window partitions | 80.00 (0.00) | 58.68 (0.00) | 81.49 (35.74) | 88.96 (65.07) | 3 |
+| loss 50%, 3-window partitions | 80.00 (0.00) | 58.68 (0.00) | 78.74 (35.74) | 87.19 (65.07) | 3 |
+| default, 1 round per window | 9.28 (0.00) | 51.35 (15.11) | 64.15 (47.11) | 74.36 (61.44) | 4 |
+| default, 12 rounds per window | 80.00 (0.00) | 85.20 (62.38) | 92.97 (76.48) | 98.70 (87.04) | 1 |
+| loss 50%, **no retries**, no partitions | 90.60 (68.30) | 57.99 (52.37) | 52.74 (45.92) | 53.83 (46.36) | 13 |
+
+The loss levels from 0 to 30% give identical numbers because a partition
+schedule depends only on the seed, and with retries every exchange that is
+not partitioned eventually completes within the window. Two protocol changes
+were made after the very first simulator run showed slow convergence under
+loss: heartbeats piggybacked on pull messages instead of a separate gossip
+round trip, and up to 2 retries per request. The last row shows what the
+retries are worth.
+
+Live clusters (real HTTP between processes, not simulated):
+
+* `make cluster-demo` (3 processes, 12 s window every 20 s): converged 6.1 s
+  after the first writes (it waited for the window to open). During a 25 s
+  partition the majority side converged and the minority diverged. 1.0 s after
+  healing all three were identical, and a concurrently edited case record
+  resolved to the same version everywhere.
+  [log](results/cluster_demo_3nodes.txt)
+* docker-compose, **12 containers**, partitioned 8 | 4 for 40 s with
+  conflicting writes: all 12 replicas identical (240/240 records) 3.5 s after
+  healing. [log](results/compose_demo_12nodes.txt)
 
 ## Repository layout
 
@@ -299,7 +432,8 @@ results/         outputs of the runs quoted in this README
 
 * No Raspberry Pi was available while building this rebuild, so **edge latency
   and memory are not reported here**. `make bench` prints them in the target
-  table format for pasting into this README.
+  table format for pasting into this README. The build-machine numbers above
+  say nothing about Pi performance.
 * `bbca.hi` is a stand-in task (Hindi news topics). Accuracy on the real
   welfare-intent task, and on Urdu and Dogri, needs real labeled queries.
 * The sync layer trusts its peers: there is no authentication or encryption

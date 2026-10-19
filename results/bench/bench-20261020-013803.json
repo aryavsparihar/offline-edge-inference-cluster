@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-10-19T20:06:52+00:00",
+  "hardware": {
+    "machine": "arm64",
+    "system": "Darwin 27.0.0",
+    "python": "3.11.17",
+    "cpu_count": 10,
+    "ram_gb": 16.0,
+    "cpu": "Apple M4",
+    "onnxruntime": "1.31.0"
+  },
+  "settings": {
+    "max_seq_len": 128,
+    "threads": 4,
+    "concurrency": 1,
+    "duration_s": 60.0,
+    "warmup_s": 10.0,
+    "graph_opt": "all"
+  },
+  "classify": {
+    "requests": 2284,
+    "errors": 0,
+    "duration_s": 60.02,
+    "throughput_rps": 38.05,
+    "p50_ms": 25.5,
+    "p95_ms": 30.4,
+    "p99_ms": 37.4,
+    "mean_ms": 26.3,
+    "max_ms": 115.0,
+    "rss_peak_mb": 1085.359375,
+    "rss_mean_mb": 1085.1567028985507,
+    "rss_model_load_mb": 1018.1,
+    "model_file_mb": 278.7,
+    "model": "xlmr-bbca/model.fp32.int8.onnx"
+  },
+  "compression_report": null,
+  "sync": null
+}

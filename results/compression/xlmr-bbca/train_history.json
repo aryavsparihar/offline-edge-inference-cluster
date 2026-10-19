@@ -1,0 +1,40 @@
+{
+  "config": {
+    "epochs": 4,
+    "batch_size": 16,
+    "lr": 3e-05,
+    "weight_decay": 0.01,
+    "warmup_ratio": 0.1,
+    "max_seq_len": 128,
+    "grad_clip": 1.0,
+    "seed": 13,
+    "device": "auto",
+    "eval_every": 0
+  },
+  "history": [
+    {
+      "accuracy": 0.6878612716763006,
+      "macro_f1": 0.25256935458220203,
+      "n": 346,
+      "step": 196
+    },
+    {
+      "accuracy": 0.7456647398843931,
+      "macro_f1": 0.2842873711231529,
+      "n": 346,
+      "step": 392
+    },
+    {
+      "accuracy": 0.7456647398843931,
+      "macro_f1": 0.3111831306040796,
+      "n": 346,
+      "step": 588
+    },
+    {
+      "accuracy": 0.7630057803468208,
+      "macro_f1": 0.3153274560491055,
+      "n": 346,
+      "step": 784
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "k": 10,
-  "identical_pct_at_k": 94.87,
+  "identical_pct_at_k": 96.14,
   "identical_pct_at_k_min": 86.82,
   "windows_to_100": 11,
-  "settings": "in-process sim, mean of 5 seeds: 12 replicas, 6 rounds/window, fanout 2, 20% loss per message, partitions p=0.3 x 1 window, restart p=0.05, 20 writes/node/window"
+  "settings": "in-process sim, mean of 10 seeds: 12 replicas, 6 rounds/window, fanout 2, 20% loss per message, partitions p=0.3 x 1 window, restart p=0.05, 20 writes/node/window"
 }

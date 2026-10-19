@@ -1,0 +1,39 @@
+{
+  "run": "xlmr-bbca",
+  "source": "model.pruned.onnx",
+  "n_test": 866,
+  "rows": [
+    {
+      "setting": "per-tensor, MatMul+Gather",
+      "file": "ablation/model.pruned.q0.onnx",
+      "size_mb": 258.9,
+      "accuracy": 0.7621247113163973,
+      "macro_f1": 0.3150428675675472,
+      "local_p50_ms": 31.1
+    },
+    {
+      "setting": "per-channel, MatMul+Gather",
+      "file": "ablation/model.pruned.q1.onnx",
+      "size_mb": 259.2,
+      "accuracy": 0.7528868360277137,
+      "macro_f1": 0.3112495441194679,
+      "local_p50_ms": 200.0
+    },
+    {
+      "setting": "per-tensor, MatMul only",
+      "file": "ablation/model.pruned.q2.onnx",
+      "size_mb": 836.1,
+      "accuracy": 0.7632794457274826,
+      "macro_f1": 0.31595536903626026,
+      "local_p50_ms": 49.6
+    },
+    {
+      "setting": "per-channel, MatMul only",
+      "file": "ablation/model.pruned.q3.onnx",
+      "size_mb": 836.4,
+      "accuracy": 0.7551963048498845,
+      "macro_f1": 0.31401625398235034,
+      "local_p50_ms": 151.5
+    }
+  ]
+}

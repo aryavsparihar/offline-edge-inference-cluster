@@ -105,16 +105,26 @@ hardware line.
 
 ## 7. Memory budget (4 GB)
 
-| component | resident memory |
-|---|---|
-| Raspberry Pi OS Lite, idle | ~150-250 MB |
-| node process without a model (FastAPI + SQLite) | measured by `/metrics` → `edge_process_rss_bytes` |
-| classifier: XLM-R pruned+INT8 | reported as `rss_model_load_mb` by `make bench` |
-| generator: Qwen2.5-0.5B-Instruct INT8 (512 MB file) | reported as `rss_model_load_mb` by `make bench` |
+Measured so far (not on a Pi; ARM Linux numbers come from the arm64 Docker
+image running under Docker Desktop on an Apple M4):
 
-The systemd unit caps the node at `MemoryMax=2G`. Larger generative models
-(1.5B+ parameters) don't fit next to the classifier with useful headroom and
-aren't supported.
+| component | measured | where |
+|---|---|---|
+| node process serving XLM-R pruned+INT8 (`model.pruned.int8.onnx`, 259 MB) | 636 MiB container memory after two requests | `linux/arm64` container, onnxruntime 1.31.0 |
+| Qwen2.5-0.5B-Instruct INT8 generator (512 MB file) | +920 MB RSS on load, ~1.55 GB process peak while decoding | macOS arm64, onnxruntime 1.31.0 |
+
+Both together come to about 2.2 GB, which leaves headroom on a 4 GB Pi next
+to Raspberry Pi OS Lite. Re-measure on the Pi with `make bench`: it reports
+`rss_model_load_mb` and the peak/mean RSS under load. The systemd unit caps
+the node at `MemoryMax=2G`. Raise it to `3G` if you enable the generator.
+Larger generative models (1.5B+ parameters) don't fit next to the classifier
+with useful headroom and aren't supported.
+
+ONNX Runtime telemetry events are disabled in code
+(`onnxruntime.disable_telemetry_events()`). The node's own code only ever
+connects to the peers in its config. ORT still logs a harmless "Failed to
+persist telemetry device ID" warning at startup. If you need a hard
+guarantee, enforce egress rules in the firewall.
 
 ## 8. Docker instead of systemd (optional)
 
