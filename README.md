@@ -8,7 +8,7 @@ optionally a small generative model. Nodes keep working fully offline and
 reconcile their data with CRDTs when a window opens.
 
 This repository is a **rebuild** of *Nida-e-Watan*, a digital-inclusion
-project that helped displaced families in the Chenab Valley (Jammu & Kashmir)
+project that aimed to help displaced families in the Chenab Valley (Jammu & Kashmir)
 find and access government welfare schemes such as pensions, ration cards,
 housing, health cover, scholarships and identity documents. The project's
 original code and data were lost in 2026. Everything here was rewritten from
