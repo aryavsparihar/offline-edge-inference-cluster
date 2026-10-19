@@ -120,6 +120,21 @@ def test_importance_prune_export_quantize(kind: str, tokenizer, tmp_path: Path) 
     assert len(q.predict(texts)) == len(texts)
 
 
+@pytest.mark.parametrize("kind", ["bert", "xlm-roberta", "albert"])
+def test_manual_head_slicing_equals_builtin_prune_heads(kind: str, tokenizer) -> None:
+    """The transformers-5 fallback must compute exactly what model.prune_heads computes."""
+    builtin, manual = tiny_model(kind, tokenizer.vocab_size), tiny_model(kind, tokenizer.vocab_size)
+    spec = {0: [1, 3]} if kind == "albert" else {0: [0, 2], 1: [3]}
+    assert prune_heads(builtin, spec) == "model.prune_heads"
+    assert prune_heads(manual, spec, use_builtin=False) == "manual-slicing"
+    assert head_counts(builtin) == head_counts(manual)
+    enc = tokenizer([e.text for e in EXAMPLES[:4]], padding=True, return_tensors="pt")
+    with torch.no_grad():
+        a = builtin(input_ids=enc["input_ids"], attention_mask=enc["attention_mask"]).logits
+        b = manual(input_ids=enc["input_ids"], attention_mask=enc["attention_mask"]).logits
+    torch.testing.assert_close(a, b)
+
+
 def test_select_heads_keeps_one_head_per_layer() -> None:
     imp = {0: torch.tensor([0.1, 0.2]), 1: torch.tensor([0.9, 0.8])}
     assert select_heads(imp, ratio=1.0) == {0: [0], 1: [1]}

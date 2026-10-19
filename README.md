@@ -100,7 +100,8 @@ make test
 ```
 
 **2. Compress a model.** The fast smoke version uses a tiny random BERT on the
-demo sample and finishes in about a minute on CPU:
+demo sample and finishes in about ten seconds on CPU. It checks the mechanics
+only, and its accuracies are meaningless:
 
 ```bash
 make compress-tiny
@@ -186,6 +187,13 @@ Format, label set and dataset caveats: [data/README.md](data/README.md).
 | export | `export.py` | `torch.onnx.export` (opset 17, dynamic batch/sequence axes). ORT logits are checked against PyTorch on validation texts |
 | INT8 | `quantize.py` | `onnxruntime.quantization.quantize_dynamic` after `quant_pre_process`. `MatMul` + `Gather` (embeddings), per-tensor by default, per-channel optional |
 | report | `report.py` | size on disk and test accuracy for fp32, fp32+INT8, pruned and pruned+INT8 |
+| ablation | `ablation.py` | re-quantizes the pruned model per-tensor/per-channel, with/without embedding quantization |
+
+`model.prune_heads` was removed in transformers 5, so the requirements pin
+**transformers 4.57.6**, the last 4.x release. With transformers 5 the code
+falls back to slicing the projections itself, which gives the same shapes and
+the same function. The offline tests check both the shapes and that the
+pruned model saves and reloads to identical logits.
 
 **Model support:**
 

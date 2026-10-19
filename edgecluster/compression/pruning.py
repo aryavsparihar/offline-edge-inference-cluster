@@ -242,11 +242,15 @@ def _prune_heads_manually(unit: AttentionUnit, heads: list[int], owner: nn.Modul
     mod.pruned_heads = already | set(heads)
 
 
-def prune_heads(model: nn.Module, spec: dict[int, list[int]]) -> str:
-    """Remove heads in place. Returns which mechanism was used."""
+def prune_heads(model: nn.Module, spec: dict[int, list[int]], use_builtin: bool = True) -> str:
+    """Remove heads in place. Returns which mechanism was used.
+
+    ``use_builtin=False`` forces the manual slicing path (used automatically
+    with transformers 5, which no longer has ``prune_heads``).
+    """
     if not spec:
         return "none"
-    if hasattr(model, "prune_heads"):
+    if use_builtin and hasattr(model, "prune_heads"):
         try:
             model.prune_heads(spec)
             return "model.prune_heads"
