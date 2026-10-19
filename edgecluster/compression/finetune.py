@@ -74,7 +74,7 @@ def predict_torch(
     batch_size: int = 64,
 ) -> list[str]:
     """Predicted label names for ``examples``."""
-    model.eval()
+    model.to(device).eval()
     id2label = {i: lab for lab, i in label2id.items()}
     preds: list[str] = []
     for batch in batches(examples, tokenizer, label2id, batch_size, max_seq_len, device):

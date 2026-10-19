@@ -74,6 +74,7 @@ class SimConfig:
     quiesce_windows: int = 20  # extra windows without writes to measure time-to-100%
     page_size: int = 200
     max_pages: int = 5
+    retries: int = 2  # extra attempts per sync request (0 = no retries)
     max_skew_s: float = 300.0
     period_s: float = 86400.0
     window_s: float = 7200.0
@@ -205,6 +206,7 @@ class Simulator:
             rng=random.Random(self.rng.getrandbits(32)),
             page_size=self.cfg.page_size,
             max_pages=self.cfg.max_pages,
+            retries=self.cfg.retries,
         )
 
     def restart(self, node_id: str) -> None:
@@ -367,7 +369,8 @@ def print_result(res: SimResult) -> None:
     print(
         f"nodes={cfg.nodes} K={cfg.windows} rounds/window={cfg.rounds_per_window} fanout={cfg.fanout} "
         f"loss={cfg.loss} partition(p={cfg.partition_prob}, len={cfg.partition_windows}w, "
-        f"groups={cfg.partition_groups}) restart_p={cfg.restart_prob} writes/node/window={cfg.writes_per_node} "
+        f"groups={cfg.partition_groups}) restart_p={cfg.restart_prob} retries={cfg.retries} "
+        f"writes/node/window={cfg.writes_per_node} "
         f"seed={cfg.seed}"
     )
     print(

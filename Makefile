@@ -53,7 +53,7 @@ sim:                ## in-process 12-node simulation with the default fault sett
 	$(PYTHON) -m sim.simulator --nodes $(NODES) --json results/sim/default.json
 
 sweep:              ## convergence sweep over loss / partitions / rounds / restarts (writes results/sim/headline.json)
-	$(PYTHON) -m sim.sweep --seeds 5 --out results/sim
+	$(PYTHON) -m sim.sweep --seeds 10 --out results/sim
 
 cluster-demo:       ## 3 real node processes on localhost: partition, heal, converge
 	$(PYTHON) -m sim.cluster_demo --nodes 3

@@ -59,7 +59,12 @@ def aggregate(runs: list[dict[str, Any]]) -> dict[str, Any]:
 
 def grid(base: SimConfig) -> dict[str, list[tuple[str, SimConfig]]]:
     """The sweeps reported in the README."""
-    sweeps: dict[str, list[tuple[str, SimConfig]]] = {"loss_x_partition": [], "rounds": [], "restarts": []}
+    sweeps: dict[str, list[tuple[str, SimConfig]]] = {
+        "loss_x_partition": [],
+        "rounds": [],
+        "restarts": [],
+        "retries": [],
+    }
     for loss in (0.0, 0.1, 0.2, 0.3, 0.5):
         for plen in (0, 1, 3):
             label = f"loss={loss:.1f} partition_len={plen}w"
@@ -68,6 +73,15 @@ def grid(base: SimConfig) -> dict[str, list[tuple[str, SimConfig]]]:
         sweeps["rounds"].append((f"rounds/window={rounds}", replace(base, rounds_per_window=rounds)))
     for rp in (0.0, 0.05, 0.2, 0.5):
         sweeps["restarts"].append((f"restart_p={rp}", replace(base, restart_prob=rp)))
+    # Protocol ablation: bounded per-request retries vs none, without partitions.
+    for loss in (0.2, 0.5):
+        for retries in (0, 2):
+            sweeps["retries"].append(
+                (
+                    f"loss={loss:.1f} retries={retries} (no partitions)",
+                    replace(base, loss=loss, retries=retries, partition_windows=0),
+                )
+            )
     return sweeps
 
 
@@ -80,7 +94,8 @@ def to_markdown(results: dict[str, list[dict[str, Any]]], base: SimConfig, seeds
         f"fanout {base.fanout}, loss {base.loss} per message, partitions p={base.partition_prob} "
         f"lasting {base.partition_windows} window(s) into {base.partition_groups} groups, restart p={base.restart_prob}/node/window, "
         f"{base.writes_per_node} writes/node before each window ({base.update_frac:.0%} updates to "
-        f"{base.case_pool} shared case records, {base.delete_frac:.0%} deletes), clock skew up to ±{base.max_skew_s:.0f}s. "
+        f"{base.case_pool} shared case records, {base.delete_frac:.0%} deletes), {base.retries} retries per request, "
+        f"clock skew up to ±{base.max_skew_s:.0f}s. "
         f"Each cell: mean (min) over {seeds} seeds.",
         "",
         "`k=N`: % of records identical on all replicas right after window N, with new writes still arriving "
@@ -112,7 +127,7 @@ def to_markdown(results: dict[str, list[dict[str, Any]]], base: SimConfig, seeds
 def main() -> None:
     """CLI entry point."""
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--seeds", type=int, default=3)
+    ap.add_argument("--seeds", type=int, default=10)
     ap.add_argument("--out", default="results/sim")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--nodes", type=int, default=SimConfig.nodes)
