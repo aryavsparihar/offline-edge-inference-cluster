@@ -1,0 +1,26 @@
+# Smoke test: a tiny random BERT on the hand-made demo sample. It checks that every stage runs.
+# The accuracies it produces are meaningless (random-weight model, 84 demo examples, test == train).
+name: tiny-sample
+base_model: hf-internal-testing/tiny-random-BertForSequenceClassification
+dataset:
+  kind: jsonl
+  config: sample
+  train: [data/sample/hi.jsonl, data/sample/ur.jsonl]
+  validation: [data/sample/hi.jsonl, data/sample/ur.jsonl]
+  test: [data/sample/hi.jsonl, data/sample/ur.jsonl]
+max_seq_len: 64
+finetune:
+  epochs: 2
+  batch_size: 16
+  lr: 1.0e-3
+  device: cpu
+pruning:
+  head_ratio: 0.25
+  ffn_ratio: 0.25
+  importance_examples: 84
+  recovery_epochs: 1
+  recovery_lr: 1.0e-3
+quantization:
+  per_channel: false
+  op_types: [MatMul, Gather]
+out_dir: runs/tiny-sample

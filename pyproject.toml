@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "edgecluster"
+version = "0.1.0"
+description = "Offline-first distributed edge inference (ONNX Runtime + CRDT sync) for Raspberry Pi clusters"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Aryaveer Singh Parihar" }]
+# Exact pins live in requirements/*.txt; these are the compatible ranges.
+dependencies = [
+    "onnxruntime>=1.18",
+    "tokenizers>=0.19",
+    "numpy>=1.26",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "httpx>=0.27",
+    "prometheus-client>=0.20",
+    "pydantic>=2.6",
+    "pyyaml>=6.0",
+    "psutil>=5.9",
+]
+
+[project.optional-dependencies]
+compress = ["torch>=2.3", "transformers>=4.44", "onnx>=1.16", "datasets>=2.20", "safetensors>=0.4", "sentencepiece>=0.2", "protobuf>=4"]
+dev = ["pytest>=8", "hypothesis>=6.100", "ruff>=0.5"]
+
+[tool.setuptools.packages.find]
+include = ["edgecluster*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "slow: downloads a tiny model from the Hugging Face Hub and runs the compression pipeline",
+]
+filterwarnings = ["ignore::DeprecationWarning:torch.*", "ignore::FutureWarning"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+extend-exclude = ["runs", "models"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003"]  # Devanagari/Nastaliq text in docstrings and data is intentional
+
+[tool.ruff.format]
+quote-style = "double"

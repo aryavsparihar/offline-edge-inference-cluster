@@ -89,6 +89,10 @@ class OnnxGenerator:
         self.input_names = set(inputs)
         self.past_names = sorted(n for n in inputs if n.startswith("past_key_values"))
         self.present_names = [o.name for o in self.session.get_outputs() if o.name.startswith("present")]
+        # present.{i}.key -> past_key_values.{i}.key (match by name, never by position)
+        self.present_to_past = {n: n.replace("present", "past_key_values", 1) for n in self.present_names}
+        if set(self.present_to_past.values()) != set(self.past_names):
+            raise ValueError("model's present.* outputs do not match its past_key_values.* inputs")
         past_type = inputs[self.past_names[0]].type if self.past_names else "tensor(float)"
         self.kv_dtype = np.float16 if "float16" in past_type else np.float32
         self._lock = threading.Lock()
@@ -97,8 +101,14 @@ class OnnxGenerator:
         shape = (1, self.num_kv_heads, 0, self.head_dim)
         return {n: np.zeros(shape, dtype=self.kv_dtype) for n in self.past_names}
 
-    def generate_ids(self, prompt_ids: list[int], max_new_tokens: int) -> tuple[list[int], float]:
-        """Greedy-decode up to ``max_new_tokens``. Returns (new ids, time-to-first-token ms)."""
+    def generate_ids(
+        self, prompt_ids: list[int], max_new_tokens: int, min_new_tokens: int = 0
+    ) -> tuple[list[int], float]:
+        """Greedy-decode up to ``max_new_tokens``. Returns (new ids, time-to-first-token ms).
+
+        EOS is suppressed for the first ``min_new_tokens`` steps, which the
+        benchmark uses to time responses of a fixed length.
+        """
         past = self._empty_past()
         ids = np.asarray([prompt_ids], dtype=np.int64)
         past_len, out_ids, ttft = 0, [], 0.0
@@ -113,15 +123,17 @@ class OnnxGenerator:
             if "position_ids" in self.input_names:
                 feeds["position_ids"] = np.arange(past_len, past_len + n, dtype=np.int64)[None, :]
             outputs = self.session.run(["logits", *self.present_names], feeds)
-            next_id = int(np.argmax(outputs[0][0, -1]))
+            logits = outputs[0][0, -1]
+            if step < min_new_tokens:
+                logits = logits.copy()
+                logits[list(self.eos_ids)] = -np.inf
+            next_id = int(np.argmax(logits))
             if step == 0:
                 ttft = (time.perf_counter() - start) * 1000
             if next_id in self.eos_ids:
                 break
             out_ids.append(next_id)
-            past = {
-                p: v for p, v in zip(self.past_names, outputs[1:], strict=True)
-            }
+            past = {self.present_to_past[n]: v for n, v in zip(self.present_names, outputs[1:], strict=True)}
             past_len += n
             ids = np.asarray([[next_id]], dtype=np.int64)
         return out_ids, ttft

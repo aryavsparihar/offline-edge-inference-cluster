@@ -1,0 +1,30 @@
+# /etc/systemd/system/edgecluster.service
+# One node of the cluster. Install with deploy/install-pi.sh or see deploy/raspberry-pi.md.
+[Unit]
+Description=edgecluster inference + sync node
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=edge
+Group=edge
+WorkingDirectory=/opt/edgecluster
+Environment=PYTHONUNBUFFERED=1
+# Node identity and paths; per-node overrides live in /etc/edgecluster/node.env
+EnvironmentFile=-/etc/edgecluster/node.env
+ExecStart=/opt/edgecluster/.venv/bin/python -m edgecluster.serving --config /etc/edgecluster/cluster.yaml
+Restart=on-failure
+RestartSec=5
+# The Pi has 4 GB: cap the node so a runaway request can't take the OS down.
+MemoryMax=2G
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/edgecluster
+ReadOnlyPaths=/opt/edgecluster /etc/edgecluster
+
+[Install]
+WantedBy=multi-user.target

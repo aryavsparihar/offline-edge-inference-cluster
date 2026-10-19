@@ -400,6 +400,7 @@ def main() -> None:
         else:
             ap.add_argument(flag, type=type(value), default=value)
     ap.add_argument("--json", help="write the full result as JSON to this path")
+    ap.add_argument("--headline", help="write a one-line summary JSON (read by bench/latency.py)")
     args = ap.parse_args()
     cfg = SimConfig(**{k: getattr(args, k) for k in asdict(defaults)})
     res = simulate(cfg)
@@ -407,6 +408,21 @@ def main() -> None:
     if args.json:
         Path(args.json).parent.mkdir(parents=True, exist_ok=True)
         Path(args.json).write_text(json.dumps(res.to_dict(), indent=2))
+    if args.headline:
+        k = res.final_write_phase
+        summary = {
+            "k": k.window,
+            "identical_pct_at_k": k.identical_pct,
+            "correct_pct_at_k": k.correct_pct,
+            "windows_to_100": res.windows_to_full_convergence,
+            "settings": (
+                f"in-process sim: {cfg.nodes} replicas, {cfg.rounds_per_window} rounds/window, fanout {cfg.fanout}, "
+                f"{cfg.loss:.0%} message loss, partitions p={cfg.partition_prob} x {cfg.partition_windows} window(s), "
+                f"restart p={cfg.restart_prob}, {cfg.writes_per_node} writes/node/window, seed {cfg.seed}"
+            ),
+        }
+        Path(args.headline).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.headline).write_text(json.dumps(summary, indent=2))
 
 
 if __name__ == "__main__":

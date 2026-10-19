@@ -1,0 +1,42 @@
+# Shared cluster config. Copy to /etc/edgecluster/cluster.yaml on every node.
+# The node id comes from EDGE_NODE_ID (set in /etc/edgecluster/node.env).
+cluster:
+  peers:
+    - {id: node1,  url: "http://10.42.0.11:8000"}
+    - {id: node2,  url: "http://10.42.0.12:8000"}
+    - {id: node3,  url: "http://10.42.0.13:8000"}
+    - {id: node4,  url: "http://10.42.0.14:8000"}
+    - {id: node5,  url: "http://10.42.0.15:8000"}
+    - {id: node6,  url: "http://10.42.0.16:8000"}
+    - {id: node7,  url: "http://10.42.0.17:8000"}
+    - {id: node8,  url: "http://10.42.0.18:8000"}
+    - {id: node9,  url: "http://10.42.0.19:8000"}
+    - {id: node10, url: "http://10.42.0.20:8000"}
+    - {id: node11, url: "http://10.42.0.21:8000"}
+    - {id: node12, url: "http://10.42.0.22:8000"}
+  uplink:
+    period: 1d
+    utc_offset: 5.5h          # IST, so window times below are local
+    windows:
+      - {start: "06:00", duration: 2h}
+  sync:
+    interval: 30s             # time between gossip rounds inside a window
+    fanout: 2
+    timeout: 5s
+    suspect_after: 5m
+
+port: 8000
+data_dir: /var/lib/edgecluster
+classifier:
+  model_dir: /opt/edgecluster/models/xlmr-bbca   # contains model.pruned.int8.onnx, tokenizer.json, meta.json
+  model_file: model.pruned.int8.onnx
+  max_seq_len: 128
+  intra_op_threads: 4
+  inter_op_threads: 1
+  log_queries: true
+  store_query_text: false    # replicate only a SHA-256 of the query text
+generator:
+  enabled: false
+  model_dir: /opt/edgecluster/models/qwen2.5-0.5b-instruct
+  model_file: onnx/model_quantized.onnx
+  max_new_tokens: 32

@@ -1,0 +1,13 @@
+# Single node on localhost with the sync window always open (development).
+node_id: node1
+host: 127.0.0.1
+port: 8000
+data_dir: runs/node-data
+uplink:
+  always_open: true
+classifier:
+  model_dir: runs/xlmr-bbca/onnx
+  model_file: model.pruned.int8.onnx
+generator:
+  enabled: false
+  model_dir: models/qwen2.5-0.5b-instruct
