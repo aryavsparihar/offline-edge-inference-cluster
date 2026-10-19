@@ -29,6 +29,8 @@ def make_session(
     stays on by default because it lowers latency under continuous load. Turn
     it off to save power on a mostly idle node.
     """
+    # Offline deployment handling sensitive data: never emit runtime telemetry.
+    ort.disable_telemetry_events()
     if graph_optimization not in GRAPH_LEVELS:
         raise ValueError(f"graph_optimization must be one of {sorted(GRAPH_LEVELS)}")
     opts = ort.SessionOptions()

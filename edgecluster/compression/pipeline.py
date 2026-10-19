@@ -78,7 +78,8 @@ def run(cfg: dict[str, Any]) -> dict[str, Any]:
     timings: dict[str, float] = {}
 
     # 2. fine-tune ----------------------------------------------------------------
-    ft_dir = out / "finetuned"
+    # ``finetuned_dir`` lets pruning-ratio variants share one fine-tuned checkpoint.
+    ft_dir = Path(cfg.get("finetuned_dir") or out / "finetuned")
     t0 = time.time()
     if (ft_dir / "config.json").exists() and cfg.get("reuse_finetuned", True):
         log.info("reusing fine-tuned model in %s", ft_dir)
@@ -106,13 +107,22 @@ def run(cfg: dict[str, Any]) -> dict[str, Any]:
     write_runtime_files(tok, onnx_dir, meta)
     probe = [ex.text for ex in val_set[:16]]
     t0 = time.time()
-    verify_fp32 = export_onnx(model, tok, onnx_dir / "model.fp32.onnx", max_len, probe)
     qcfg = cfg.get("quantization", {})
     qkw = {
         "per_channel": bool(qcfg.get("per_channel", False)),
         "op_types": tuple(qcfg.get("op_types", ("MatMul", "Gather"))),
     }
-    quantize_int8(onnx_dir / "model.fp32.onnx", onnx_dir / "model.fp32.int8.onnx", **qkw)
+    baseline = cfg.get("baseline_onnx_dir")
+    if baseline:
+        # Same fine-tuned checkpoint as another run: link its fp32 files instead of re-exporting 1+ GB.
+        for name in ("model.fp32.onnx", "model.fp32.int8.onnx"):
+            link = onnx_dir / name
+            link.unlink(missing_ok=True)
+            link.symlink_to(Path(baseline).resolve() / name)
+        verify_fp32 = json.loads((Path(baseline).parent / "run.json").read_text())["verify"]["fp32"]
+    else:
+        verify_fp32 = export_onnx(model, tok, onnx_dir / "model.fp32.onnx", max_len, probe)
+        quantize_int8(onnx_dir / "model.fp32.onnx", onnx_dir / "model.fp32.int8.onnx", **qkw)
     timings["export_fp32_s"] = time.time() - t0
     log.info("fp32 export verified: %s", verify_fp32)
 
@@ -150,7 +160,8 @@ def run(cfg: dict[str, Any]) -> dict[str, Any]:
         )
         model, rec_history = train(model, tok, train_set, val_set, label2id, rec_cfg)
     timings["recovery_s"] = time.time() - t0
-    save_pruned(model, tok, spec, out / "pruned")
+    if cfg.get("save_pruned_checkpoint", True):
+        save_pruned(model, tok, spec, out / "pruned")
 
     # 6. pruned export + int8 ----------------------------------------------------
     t0 = time.time()
