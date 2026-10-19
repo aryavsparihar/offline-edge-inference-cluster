@@ -291,9 +291,16 @@ transformers 4.57.6. Benchmarks ran with only normal desktop apps open.
 |---|---|---|---|---|
 | Model size | 1.1 GB fp32 → ~260 MB (4.2×) | **1112.4 MB → 258.9 MB (4.30×)** | met (1.1 MB under, +0.10×) | ONNX file size on disk. XLM-R base, 30% of heads + 20% of FFN neurons pruned, 1-epoch recovery fine-tune, dynamic INT8 (`MatMul`+`Gather`, per-tensor). [report](results/compression/xlmr-bbca/report.md) |
 | Accuracy | ≥ 91% of fp32 retained | **100.3% retained**: 76.21% vs 75.98% fp32 | met (+9.3 pts above the floor) | IndicGLUE `bbca.hi` held-out test split, n=866, 14 topics. The 95% CI at this n is about ±2.8 pts, so fp32 and pruned+INT8 are statistically tied. Majority-class baseline: 41.2% |
-| Classification latency | ~380 ms on a Raspberry Pi 4 | **not measured on a Pi** | unknown | Build machine only (not comparable): p50 15 ms / p95 17 ms / p99 22 ms, 64.2 req/s, peak RSS 1066 MB. Same model, max_seq_len=128 (padded), batch 1, concurrency 1, 4 intra-op threads, 60 s continuous load after 10 s warm-up. [bench](results/bench/bench-20261020-013534.md) |
-| Generative latency | ~1.2 s | **not measured on a Pi** | unknown | Definition: wall time for one response of exactly 32 new tokens (greedy, batch 1, ~40-token chat prompt), Qwen2.5-0.5B-Instruct INT8 ONNX. Build machine only: p50 1.89 s / p95 2.17 s, time-to-first-token 86 ms, 58 ms/token |
+| Classification latency | ~380 ms on a Raspberry Pi 4 | **not yet measured on a Pi** (original project reported ~380 ms†) | unknown | Build machine only (not comparable): p50 15 ms / p95 17 ms / p99 22 ms, 64.2 req/s, peak RSS 1066 MB. Same model, max_seq_len=128 (padded), batch 1, concurrency 1, 4 intra-op threads, 60 s continuous load after 10 s warm-up. [bench](results/bench/bench-20261020-013534.md) |
+| Generative latency | ~1.2 s | **not yet measured on a Pi** (original project reported ~1.2 s†) | unknown | Definition: wall time for one response of exactly 32 new tokens (greedy, batch 1, ~40-token chat prompt), Qwen2.5-0.5B-Instruct INT8 ONNX. Build machine only: p50 1.89 s / p95 2.17 s, time-to-first-token 86 ms, 58 ms/token |
 | Sync integrity | ~99.2% | **96.14%** mean over 10 seeds (min 86.82%) after K=10 windows; **100% in every seed** after one more window without new writes | −3.06 pts at K=10 | % of records identical on all 12 replicas right after window 10, with new writes before every window. Settings: 20% loss per message, a random 2-way partition in 30% of windows (1 window long), 5% node restart per window, 6 sync rounds per window, fanout 2, 240 writes per window, clock skew up to ±5 min. [sweep](results/sim/sweep.md) |
+
+† **Figures from the original Nida-e-Watan deployment.** That system's code,
+data and benchmark logs were lost in 2026, so these numbers can't be checked
+or reproduced, and its exact model, sequence length and measurement setup are
+unknown. They are kept for reference only and are **not results of this
+code**. Replace them with the table from `make bench` once it has been run on
+a Raspberry Pi 4.
 
 **Why sync integrity is below 99.2% at K=10:** in the seeds where a random
 partition happens to be open during window 10, records written just before
