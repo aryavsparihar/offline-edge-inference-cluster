@@ -1,0 +1,43 @@
+# Hand-made DEMO sample for pipeline testing. NOT the original Nida-e-Watan corpus.
+{"text": "मेरी वृद्धावस्था पेंशन पिछले तीन महीने से नहीं आई है", "label": "pension", "lang": "hi"}
+{"text": "विधवा पेंशन के लिए आवेदन कैसे करें?", "label": "pension", "lang": "hi"}
+{"text": "दिव्यांग पेंशन योजना में कितने पैसे मिलते हैं", "label": "pension", "lang": "hi"}
+{"text": "पेंशन का पैसा बैंक खाते में कब आएगा", "label": "pension", "lang": "hi"}
+{"text": "मेरे पिताजी की उम्र 65 साल है, क्या उन्हें पेंशन मिल सकती है?", "label": "pension", "lang": "hi"}
+{"text": "पेंशन फॉर्म में आधार नंबर गलत भर गया, कैसे सुधारें", "label": "pension", "lang": "hi"}
+{"text": "नया राशन कार्ड बनवाने के लिए कौन से कागज़ चाहिए", "label": "ration_card", "lang": "hi"}
+{"text": "राशन कार्ड में बच्चे का नाम जोड़ना है", "label": "ration_card", "lang": "hi"}
+{"text": "राशन की दुकान वाला पूरा अनाज नहीं दे रहा", "label": "ration_card", "lang": "hi"}
+{"text": "हमारा राशन कार्ड दूसरे जिले का है, यहाँ राशन मिलेगा क्या?", "label": "ration_card", "lang": "hi"}
+{"text": "एक देश एक राशन कार्ड योजना क्या है", "label": "ration_card", "lang": "hi"}
+{"text": "राशन कार्ड खो गया है, डुप्लीकेट कैसे मिलेगा", "label": "ration_card", "lang": "hi"}
+{"text": "प्रधानमंत्री आवास योजना में घर के लिए आवेदन करना है", "label": "housing", "lang": "hi"}
+{"text": "बाढ़ में हमारा घर टूट गया, मरम्मत के लिए सहायता मिलेगी?", "label": "housing", "lang": "hi"}
+{"text": "आवास योजना की दूसरी किस्त अभी तक नहीं आई", "label": "housing", "lang": "hi"}
+{"text": "विस्थापित परिवारों के लिए सरकारी मकान की कोई योजना है?", "label": "housing", "lang": "hi"}
+{"text": "कच्चे मकान को पक्का बनाने के लिए पैसा कैसे मिलेगा", "label": "housing", "lang": "hi"}
+{"text": "आवास सूची में मेरा नाम है या नहीं, कैसे देखें", "label": "housing", "lang": "hi"}
+{"text": "आयुष्मान भारत कार्ड कैसे बनता है", "label": "health_scheme", "lang": "hi"}
+{"text": "अस्पताल में मुफ्त इलाज के लिए कौन सा कार्ड चाहिए", "label": "health_scheme", "lang": "hi"}
+{"text": "गर्भवती महिलाओं के लिए कौन सी स्वास्थ्य योजना है", "label": "health_scheme", "lang": "hi"}
+{"text": "मेरी माँ का ऑपरेशन है, क्या सरकारी योजना से खर्च मिलेगा", "label": "health_scheme", "lang": "hi"}
+{"text": "गोल्डन कार्ड में परिवार के सदस्य कैसे जोड़ें", "label": "health_scheme", "lang": "hi"}
+{"text": "पास का सरकारी अस्पताल इस कार्ड को नहीं मान रहा", "label": "health_scheme", "lang": "hi"}
+{"text": "दसवीं के बाद छात्रवृत्ति के लिए आवेदन कब तक कर सकते हैं", "label": "education_scholarship", "lang": "hi"}
+{"text": "मेरी बेटी की स्कॉलरशिप का पैसा अटक गया है", "label": "education_scholarship", "lang": "hi"}
+{"text": "प्री-मैट्रिक छात्रवृत्ति के लिए आय प्रमाण पत्र ज़रूरी है?", "label": "education_scholarship", "lang": "hi"}
+{"text": "विस्थापित बच्चों का स्कूल में दाखिला कैसे होगा", "label": "education_scholarship", "lang": "hi"}
+{"text": "कॉलेज की फीस माफ़ी की कोई योजना है", "label": "education_scholarship", "lang": "hi"}
+{"text": "राष्ट्रीय छात्रवृत्ति पोर्टल पर पंजीकरण नहीं हो रहा", "label": "education_scholarship", "lang": "hi"}
+{"text": "आधार कार्ड में पता बदलना है", "label": "documents_id", "lang": "hi"}
+{"text": "जन्म प्रमाण पत्र कहाँ से बनेगा", "label": "documents_id", "lang": "hi"}
+{"text": "डोमिसाइल सर्टिफिकेट के लिए क्या करना पड़ेगा", "label": "documents_id", "lang": "hi"}
+{"text": "हमारे सारे कागज़ात बाढ़ में बह गए, नए कैसे बनवाएँ", "label": "documents_id", "lang": "hi"}
+{"text": "आय प्रमाण पत्र बनवाने में कितने दिन लगते हैं", "label": "documents_id", "lang": "hi"}
+{"text": "वोटर आईडी कार्ड में नाम की गलती ठीक करनी है", "label": "documents_id", "lang": "hi"}
+{"text": "आज बारिश होगी क्या", "label": "other", "lang": "hi"}
+{"text": "यहाँ से जम्मू की बस कितने बजे जाती है", "label": "other", "lang": "hi"}
+{"text": "मुझे अपने गाँव के सरपंच का नंबर चाहिए", "label": "other", "lang": "hi"}
+{"text": "मोबाइल रिचार्ज कैसे करें", "label": "other", "lang": "hi"}
+{"text": "बिजली का बिल बहुत ज़्यादा आया है", "label": "other", "lang": "hi"}
+{"text": "नमस्ते, आप कौन हैं?", "label": "other", "lang": "hi"}

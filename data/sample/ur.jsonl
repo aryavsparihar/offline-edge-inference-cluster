@@ -1,0 +1,43 @@
+# Hand-made DEMO sample for pipeline testing. NOT the original Nida-e-Watan corpus.
+{"text": "میری بڑھاپے کی پنشن تین مہینے سے نہیں آئی", "label": "pension", "lang": "ur"}
+{"text": "بیوہ پنشن کے لیے درخواست کیسے دیں؟", "label": "pension", "lang": "ur"}
+{"text": "معذوری پنشن میں کتنے پیسے ملتے ہیں", "label": "pension", "lang": "ur"}
+{"text": "پنشن کی رقم بینک کھاتے میں کب آئے گی", "label": "pension", "lang": "ur"}
+{"text": "میرے والد کی عمر ستر سال ہے، کیا انہیں پنشن مل سکتی ہے؟", "label": "pension", "lang": "ur"}
+{"text": "پنشن فارم میں آدھار نمبر غلط لکھا گیا، اسے کیسے درست کریں", "label": "pension", "lang": "ur"}
+{"text": "نیا راشن کارڈ بنوانے کے لیے کون سے کاغذات چاہییں", "label": "ration_card", "lang": "ur"}
+{"text": "راشن کارڈ میں بچے کا نام شامل کرنا ہے", "label": "ration_card", "lang": "ur"}
+{"text": "راشن ڈپو والا پورا اناج نہیں دے رہا", "label": "ration_card", "lang": "ur"}
+{"text": "ہمارا راشن کارڈ دوسرے ضلع کا ہے، کیا یہاں راشن ملے گا؟", "label": "ration_card", "lang": "ur"}
+{"text": "راشن کارڈ گم ہو گیا ہے، نیا کیسے ملے گا", "label": "ration_card", "lang": "ur"}
+{"text": "راشن کارڈ آدھار سے کیسے جوڑیں", "label": "ration_card", "lang": "ur"}
+{"text": "پردھان منتری آواس یوجنا میں گھر کے لیے درخواست دینی ہے", "label": "housing", "lang": "ur"}
+{"text": "سیلاب میں ہمارا گھر ٹوٹ گیا، مرمت کے لیے مدد ملے گی؟", "label": "housing", "lang": "ur"}
+{"text": "آواس یوجنا کی دوسری قسط ابھی تک نہیں آئی", "label": "housing", "lang": "ur"}
+{"text": "بے گھر خاندانوں کے لیے سرکاری مکان کی کوئی اسکیم ہے؟", "label": "housing", "lang": "ur"}
+{"text": "کچے مکان کو پکا بنانے کے لیے پیسہ کیسے ملے گا", "label": "housing", "lang": "ur"}
+{"text": "مکانوں کی فہرست میں میرا نام ہے یا نہیں، کیسے دیکھوں", "label": "housing", "lang": "ur"}
+{"text": "آیوشمان بھارت کارڈ کیسے بنتا ہے", "label": "health_scheme", "lang": "ur"}
+{"text": "ہسپتال میں مفت علاج کے لیے کون سا کارڈ چاہیے", "label": "health_scheme", "lang": "ur"}
+{"text": "حاملہ عورتوں کے لیے کون سی صحت اسکیم ہے", "label": "health_scheme", "lang": "ur"}
+{"text": "میری ماں کا آپریشن ہے، کیا سرکاری اسکیم سے خرچہ ملے گا", "label": "health_scheme", "lang": "ur"}
+{"text": "گولڈن کارڈ میں گھر والوں کے نام کیسے جوڑیں", "label": "health_scheme", "lang": "ur"}
+{"text": "قریبی سرکاری ہسپتال یہ کارڈ نہیں مان رہا", "label": "health_scheme", "lang": "ur"}
+{"text": "دسویں کے بعد وظیفے کے لیے کب تک درخواست دے سکتے ہیں", "label": "education_scholarship", "lang": "ur"}
+{"text": "میری بیٹی کی اسکالرشپ کی رقم رکی ہوئی ہے", "label": "education_scholarship", "lang": "ur"}
+{"text": "پری میٹرک وظیفے کے لیے آمدنی کا سرٹیفکیٹ ضروری ہے؟", "label": "education_scholarship", "lang": "ur"}
+{"text": "بے گھر بچوں کا اسکول میں داخلہ کیسے ہوگا", "label": "education_scholarship", "lang": "ur"}
+{"text": "کالج کی فیس معافی کی کوئی اسکیم ہے", "label": "education_scholarship", "lang": "ur"}
+{"text": "نیشنل اسکالرشپ پورٹل پر رجسٹریشن نہیں ہو رہی", "label": "education_scholarship", "lang": "ur"}
+{"text": "آدھار کارڈ میں پتہ بدلنا ہے", "label": "documents_id", "lang": "ur"}
+{"text": "پیدائش کا سرٹیفکیٹ کہاں سے بنے گا", "label": "documents_id", "lang": "ur"}
+{"text": "ڈومیسائل سرٹیفکیٹ کے لیے کیا کرنا پڑے گا", "label": "documents_id", "lang": "ur"}
+{"text": "ہمارے سارے کاغذات سیلاب میں بہہ گئے، نئے کیسے بنوائیں", "label": "documents_id", "lang": "ur"}
+{"text": "آمدنی کا سرٹیفکیٹ بنوانے میں کتنے دن لگتے ہیں", "label": "documents_id", "lang": "ur"}
+{"text": "ووٹر کارڈ میں نام کی غلطی ٹھیک کرنی ہے", "label": "documents_id", "lang": "ur"}
+{"text": "آج بارش ہوگی کیا", "label": "other", "lang": "ur"}
+{"text": "یہاں سے جموں کی بس کتنے بجے جاتی ہے", "label": "other", "lang": "ur"}
+{"text": "مجھے اپنے گاؤں کے سرپنچ کا نمبر چاہیے", "label": "other", "lang": "ur"}
+{"text": "موبائل ریچارج کیسے کریں", "label": "other", "lang": "ur"}
+{"text": "بجلی کا بل بہت زیادہ آیا ہے", "label": "other", "lang": "ur"}
+{"text": "السلام علیکم، آپ کون ہیں؟", "label": "other", "lang": "ur"}

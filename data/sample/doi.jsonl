@@ -1,0 +1,16 @@
+# Hand-made DEMO sample for pipeline testing. NOT the original Nida-e-Watan corpus.
+# Dogri examples below were drafted by a non-native writer and are placeholders.
+# TODO: native-speaker review
+{"text": "मेरी बुढ़ापा पेंशन त्रै म्हीने थमां नेईं आई", "label": "pension", "lang": "doi", "needs_review": true}
+# TODO: native-speaker review
+{"text": "नमां राशन कार्ड बनाने आस्तै केह्ड़े कागज़ चाहिदे न", "label": "ration_card", "lang": "doi", "needs_review": true}
+# TODO: native-speaker review
+{"text": "हड़ च साढ़ा घर टुट्टी गेआ, मरम्मत आस्तै मदद मिलग?", "label": "housing", "lang": "doi", "needs_review": true}
+# TODO: native-speaker review
+{"text": "आयुष्मान कार्ड कि'यां बनदा ऐ", "label": "health_scheme", "lang": "doi", "needs_review": true}
+# TODO: native-speaker review
+{"text": "मेरी धी दे वजीफे दे पैसे अजें तगर नेईं आए", "label": "education_scholarship", "lang": "doi", "needs_review": true}
+# TODO: native-speaker review
+{"text": "आधार कार्ड च पता बदलना ऐ", "label": "documents_id", "lang": "doi", "needs_review": true}
+# TODO: native-speaker review
+{"text": "अज्ज बरखा होग के?", "label": "other", "lang": "doi", "needs_review": true}
