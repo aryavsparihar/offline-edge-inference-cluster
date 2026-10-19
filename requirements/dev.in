@@ -1,0 +1,4 @@
+-r compress.in
+pytest
+hypothesis
+ruff==0.17.1

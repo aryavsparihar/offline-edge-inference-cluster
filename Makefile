@@ -49,11 +49,11 @@ compress-tiny:      ## the same pipeline on a tiny random model (minutes, CPU)
 serve:              ## run one node (NODE_CONFIG=...)
 	$(PYTHON) -m edgecluster.serving --config $(NODE_CONFIG)
 
-sim:                ## in-process 12-node simulation with the default fault settings
-	$(PYTHON) -m sim.simulator --nodes $(NODES) --json results/sim/default.json --headline results/sim/headline.json
+sim:                ## in-process 12-node simulation with the default fault settings (one seed)
+	$(PYTHON) -m sim.simulator --nodes $(NODES) --json results/sim/default.json
 
-sweep:              ## convergence sweep over loss / partitions / rounds / restarts
-	$(PYTHON) -m sim.sweep --seeds 3 --out results/sim
+sweep:              ## convergence sweep over loss / partitions / rounds / restarts (writes results/sim/headline.json)
+	$(PYTHON) -m sim.sweep --seeds 5 --out results/sim
 
 cluster-demo:       ## 3 real node processes on localhost: partition, heal, converge
 	$(PYTHON) -m sim.cluster_demo --nodes 3

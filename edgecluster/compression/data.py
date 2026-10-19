@@ -32,9 +32,7 @@ def batches(
     generator: torch.Generator | None = None,
 ) -> Iterator[dict[str, torch.Tensor]]:
     """Tokenize and yield model-ready batches (dynamic padding per batch)."""
-    order = (
-        torch.randperm(len(examples), generator=generator).tolist() if shuffle else list(range(len(examples)))
-    )
+    order = torch.randperm(len(examples), generator=generator).tolist() if shuffle else list(range(len(examples)))
     for start in range(0, len(order), batch_size):
         chunk = [examples[i] for i in order[start : start + batch_size]]
         enc = tokenizer(

@@ -18,3 +18,5 @@ runs/
 *.db-wal
 *.db-shm
 .DS_Store
+data/public/
+*.data

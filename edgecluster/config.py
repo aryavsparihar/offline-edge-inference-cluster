@@ -79,9 +79,7 @@ class GeneratorConfig(BaseModel):
     model_file: str = "onnx/model_quantized.onnx"
     max_new_tokens: int = 32
     intra_op_threads: int = 4
-    system_prompt: str = (
-        "You are a helpful assistant for welfare scheme information. Answer briefly."
-    )
+    system_prompt: str = "You are a helpful assistant for welfare scheme information. Answer briefly."
 
 
 class NodeConfig(BaseModel):

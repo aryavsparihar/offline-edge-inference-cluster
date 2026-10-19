@@ -102,9 +102,7 @@ def build_sync_node(cfg: NodeConfig, links: LinkControl, clock: Clock) -> SyncNo
     store = ReplicatedStore(cfg.db_path, cfg.node_id, max_drift_ms=int(drift * 1000) if drift else None)
     peers = cfg.peer_urls()
     transport = HttpTransport(cfg.node_id, peers, parse_duration(cfg.sync.timeout), links)
-    membership = Membership(
-        cfg.node_id, list(peers), clock.now, suspect_after_s=parse_duration(cfg.sync.suspect_after)
-    )
+    membership = Membership(cfg.node_id, list(peers), clock.now, suspect_after_s=parse_duration(cfg.sync.suspect_after))
     return SyncNode(
         store,
         transport,

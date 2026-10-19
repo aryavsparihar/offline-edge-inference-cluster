@@ -70,9 +70,7 @@ def write_jsonl(path: str | Path, examples: Iterable[Example]) -> None:
             fh.write(json.dumps(asdict(ex), ensure_ascii=False) + "\n")
 
 
-def stratified_split(
-    examples: Sequence[Example], fractions: Sequence[float], seed: int = 13
-) -> list[list[Example]]:
+def stratified_split(examples: Sequence[Example], fractions: Sequence[float], seed: int = 13) -> list[list[Example]]:
     """Split per label so every part keeps the label distribution.
 
     ``fractions`` must sum to 1. Each label contributes at least one example to
@@ -89,7 +87,7 @@ def stratified_split(
         items = by_label[label][:]
         rng.shuffle(items)
         n = len(items)
-        counts = [int(round(f * n)) for f in fractions[:-1]]
+        counts = [round(f * n) for f in fractions[:-1]]
         if n >= len(fractions):
             counts = [max(1, c) for c in counts]
         start = 0

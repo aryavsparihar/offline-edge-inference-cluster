@@ -67,7 +67,9 @@ def run(cfg: dict[str, Any]) -> dict[str, Any]:
     out.mkdir(parents=True, exist_ok=True)
     max_len = int(cfg.get("max_seq_len", 128))
     files = resolve_data(cfg)
-    train_set, val_set, test_set = (load_many(files[s], include_needs_review=False) for s in ("train", "validation", "test"))
+    train_set, val_set, test_set = (
+        load_many(files[s], include_needs_review=False) for s in ("train", "validation", "test")
+    )
     labels = label_list(train_set)
     label2id = {lab: i for i, lab in enumerate(labels)}
     log.info("data: %d train / %d val / %d test, %d labels", len(train_set), len(val_set), len(test_set), len(labels))
@@ -106,7 +108,10 @@ def run(cfg: dict[str, Any]) -> dict[str, Any]:
     t0 = time.time()
     verify_fp32 = export_onnx(model, tok, onnx_dir / "model.fp32.onnx", max_len, probe)
     qcfg = cfg.get("quantization", {})
-    qkw = {"per_channel": bool(qcfg.get("per_channel", False)), "op_types": tuple(qcfg.get("op_types", ("MatMul", "Gather")))}
+    qkw = {
+        "per_channel": bool(qcfg.get("per_channel", False)),
+        "op_types": tuple(qcfg.get("op_types", ("MatMul", "Gather"))),
+    }
     quantize_int8(onnx_dir / "model.fp32.onnx", onnx_dir / "model.fp32.int8.onnx", **qkw)
     timings["export_fp32_s"] = time.time() - t0
     log.info("fp32 export verified: %s", verify_fp32)
@@ -127,15 +132,22 @@ def run(cfg: dict[str, Any]) -> dict[str, Any]:
     val_pruned = evaluate_torch(model, tok, val_set, label2id, max_len, device)
     model.cpu()
     timings["prune_s"] = time.time() - t0
-    log.info("pruned %s heads via %s; val acc %.4f -> %.4f", sum(map(len, spec.heads.values())), mechanism,
-             val_before["accuracy"], val_pruned["accuracy"])
+    log.info(
+        "pruned %s heads via %s; val acc %.4f -> %.4f",
+        sum(map(len, spec.heads.values())),
+        mechanism,
+        val_before["accuracy"],
+        val_pruned["accuracy"],
+    )
 
     # 5. recovery fine-tune ------------------------------------------------------
     rec_epochs = float(pcfg.get("recovery_epochs", 0))
     t0 = time.time()
     rec_history: list[dict[str, float]] = []
     if rec_epochs > 0 and (spec.heads or spec.ffn_keep):
-        rec_cfg = TrainConfig(**{**asdict(ft_cfg), "epochs": rec_epochs, "lr": float(pcfg.get("recovery_lr", ft_cfg.lr))})
+        rec_cfg = TrainConfig(
+            **{**asdict(ft_cfg), "epochs": rec_epochs, "lr": float(pcfg.get("recovery_lr", ft_cfg.lr))}
+        )
         model, rec_history = train(model, tok, train_set, val_set, label2id, rec_cfg)
     timings["recovery_s"] = time.time() - t0
     save_pruned(model, tok, spec, out / "pruned")

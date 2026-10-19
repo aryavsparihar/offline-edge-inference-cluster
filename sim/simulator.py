@@ -370,8 +370,10 @@ def print_result(res: SimResult) -> None:
         f"groups={cfg.partition_groups}) restart_p={cfg.restart_prob} writes/node/window={cfg.writes_per_node} "
         f"seed={cfg.seed}"
     )
-    print(f"{'win':>4} {'phase':>8} {'records':>8} {'identical%':>11} {'correct%':>9} {'counters%':>10} "
-          f"{'part':>5} {'rst':>4} {'msgs':>6} {'lost':>6}")
+    print(
+        f"{'win':>4} {'phase':>8} {'records':>8} {'identical%':>11} {'correct%':>9} {'counters%':>10} "
+        f"{'part':>5} {'rst':>4} {'msgs':>6} {'lost':>6}"
+    )
     for w in res.windows:
         print(
             f"{w.window:>4} {w.phase:>8} {w.records:>8} {w.identical_pct:>11.3f} {w.correct_pct:>9.3f} "
@@ -379,11 +381,15 @@ def print_result(res: SimResult) -> None:
             f"{w.messages_sent:>6} {w.messages_lost:>6}"
         )
     k = res.final_write_phase
-    print(f"\nAfter K={k.window} windows (writes still arriving): {k.identical_pct:.3f}% records identical on all "
-          f"{cfg.nodes} replicas; {k.correct_pct:.3f}% hold the true latest version.")
+    print(
+        f"\nAfter K={k.window} windows (writes still arriving): {k.identical_pct:.3f}% records identical on all "
+        f"{cfg.nodes} replicas; {k.correct_pct:.3f}% hold the true latest version."
+    )
     if res.windows_to_full_convergence is not None:
-        print(f"100% identical and correct after {res.windows_to_full_convergence} windows "
-              f"({res.windows_to_full_convergence - k.window} quiet windows after the last writes).")
+        print(
+            f"100% identical and correct after {res.windows_to_full_convergence} windows "
+            f"({res.windows_to_full_convergence - k.window} quiet windows after the last writes)."
+        )
     else:
         print(f"Did NOT reach 100% within {cfg.quiesce_windows} quiet windows.")
     print(f"total writes={res.total_writes} wall={res.wall_s:.1f}s")

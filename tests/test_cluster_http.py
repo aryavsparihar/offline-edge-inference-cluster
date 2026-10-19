@@ -23,7 +23,7 @@ def free_port() -> int:
 
 
 class ServerThread:
-    def __init__(self, app, port: int) -> None:  # noqa: ANN001
+    def __init__(self, app, port: int) -> None:
         self.server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning"))
         self.thread = threading.Thread(target=self.server.run, daemon=True)
 

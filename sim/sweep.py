@@ -89,10 +89,17 @@ def to_markdown(results: dict[str, list[dict[str, Any]]], base: SimConfig, seeds
         "",
     ]
     for name, rows in results.items():
-        lines += [f"## {name}", "", "| setting | k=1 | k=3 | k=5 | k=10 | converged | quiet→100% |", "|---|---|---|---|---|---|---|"]
+        lines += [
+            f"## {name}",
+            "",
+            "| setting | k=1 | k=3 | k=5 | k=10 | converged | quiet→100% |",
+            "|---|---|---|---|---|---|---|",
+        ]
         for row in rows:
             a = row["agg"]
-            cells = [f"{a.get(f'k{k}_mean', float('nan')):.2f} ({a.get(f'k{k}_min', float('nan')):.2f})" for k in K_POINTS]
+            cells = [
+                f"{a.get(f'k{k}_mean', float('nan')):.2f} ({a.get(f'k{k}_min', float('nan')):.2f})" for k in K_POINTS
+            ]
             q = a["quiet_windows_to_100_max"]
             lines.append(
                 f"| {row['label']} | {' | '.join(cells)} | {a['converged_runs']}/{a['runs']} | "
@@ -113,7 +120,12 @@ def main() -> None:
     args = ap.parse_args()
     base = SimConfig(nodes=args.nodes, windows=args.windows)
     sweeps = grid(base)
-    jobs = [(name, label, replace(cfg, seed=s)) for name, cells in sweeps.items() for label, cfg in cells for s in range(args.seeds)]
+    jobs = [
+        (name, label, replace(cfg, seed=s))
+        for name, cells in sweeps.items()
+        for label, cfg in cells
+        for s in range(args.seeds)
+    ]
     t0 = time.perf_counter()
     with ProcessPoolExecutor(max_workers=args.workers) as pool:
         outs = list(pool.map(run_one, [j[2] for j in jobs]))
@@ -125,7 +137,27 @@ def main() -> None:
             results[name].append({"label": label, "agg": aggregate(runs), "runs": runs})
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    (out / "sweep.json").write_text(json.dumps({"base": asdict(base), "seeds": args.seeds, "results": results}, indent=1))
+    (out / "sweep.json").write_text(
+        json.dumps({"base": asdict(base), "seeds": args.seeds, "results": results}, indent=1)
+    )
+    # Headline = the base-settings cell (no cherry-picking), read by bench/latency.py.
+    base_label = f"loss={base.loss:.1f} partition_len={base.partition_windows}w"
+    cell = next(r for r in results["loss_x_partition"] if r["label"] == base_label)
+    k = max(K_POINTS)
+    headline = {
+        "k": k,
+        "identical_pct_at_k": cell["agg"][f"k{k}_mean"],
+        "identical_pct_at_k_min": cell["agg"][f"k{k}_min"],
+        "windows_to_100": None
+        if cell["agg"]["quiet_windows_to_100_max"] is None
+        else k + cell["agg"]["quiet_windows_to_100_max"],
+        "settings": (
+            f"in-process sim, mean of {args.seeds} seeds: {base.nodes} replicas, {base.rounds_per_window} rounds/window, "
+            f"fanout {base.fanout}, {base.loss:.0%} loss per message, partitions p={base.partition_prob} x "
+            f"{base.partition_windows} window, restart p={base.restart_prob}, {base.writes_per_node} writes/node/window"
+        ),
+    }
+    (out / "headline.json").write_text(json.dumps(headline, indent=2))
     md = to_markdown(results, base, args.seeds)
     (out / "sweep.md").write_text(md + "\n")
     print(md)

@@ -1,0 +1,43 @@
+attaching to 12 running nodes on ports 8001..8012
+all nodes healthy
+
+phase 1: every node writes records locally
+[   1.6s] phase 1 sync               node1: 11 rec 0071dc36  node2: 11 rec cb957db4  node3: 11 rec 58563d33  node4: 11 rec ecb750df  node5: 11 rec 49bda6c8  node6: 11 rec 6952d218  node7: 11 rec 114865f5  node8: 11 rec 7d8f8ed0  node9: 11 rec 5f8e2354  node10: 11 rec 43853890  node11: 11 rec 62420357  node12: 11 rec c558487f  diverged
+[   2.7s] phase 1 sync               node1:121 rec 47b266f3  node2: 91 rec 956c1f0f  node3: 71 rec 644ab41f  node4:111 rec a9860bfb  node5: 91 rec d0cc74fa  node6: 91 rec 956c1f0f  node7:121 rec 47b266f3  node8: 61 rec a6a73a35  node9: 61 rec 5dbe1c38  node10:121 rec 47b266f3  node11: 81 rec 2ae19714  node12: 81 rec 9da676c2  diverged
+[   3.9s] phase 1 sync               node1:121 rec 47b266f3  node2: 91 rec 956c1f0f  node3: 71 rec 644ab41f  node4:111 rec a9860bfb  node5: 91 rec d0cc74fa  node6: 91 rec 956c1f0f  node7:121 rec 47b266f3  node8: 61 rec a6a73a35  node9: 61 rec 5dbe1c38  node10:121 rec 47b266f3  node11: 81 rec 2ae19714  node12: 81 rec 9da676c2  diverged
+[   5.0s] phase 1 sync               node1:121 rec 47b266f3  node2:121 rec 47b266f3  node3:121 rec 47b266f3  node4:121 rec 47b266f3  node5:121 rec 47b266f3  node6:121 rec 47b266f3  node7:121 rec 47b266f3  node8:121 rec 47b266f3  node9:121 rec 47b266f3  node10:121 rec 47b266f3  node11:121 rec 47b266f3  node12:121 rec 47b266f3  CONVERGED
+-> converged 3.4s after the writes
+
+phase 2: partition ['node1', 'node2', 'node3', 'node4', 'node5', 'node6', 'node7', 'node8'] | ['node9', 'node10', 'node11', 'node12'] for 40s, conflicting writes on both sides
+[   6.1s] partitioned                node1:131 rec abef5fe6  node2:131 rec 4c5ccacb  node3:131 rec ec5739e7  node4:131 rec 11e12d1e  node5:131 rec fe6954c2  node6:131 rec 14bdd635  node7:131 rec 45cda5ea  node8:131 rec 1249abfe  node9:131 rec e2e70288  node10:131 rec 4679935e  node11:131 rec 2d824f6b  node12:131 rec 9566b2fe  diverged
+[  11.2s] partitioned                node1:201 rec c047d2c1  node2:201 rec c047d2c1  node3:201 rec c047d2c1  node4:201 rec c047d2c1  node5:201 rec c047d2c1  node6:201 rec c047d2c1  node7:201 rec c047d2c1  node8:201 rec c047d2c1  node9:161 rec 58485227  node10:161 rec 58485227  node11:161 rec 58485227  node12:161 rec 58485227  diverged
+[  16.4s] partitioned                node1:201 rec c047d2c1  node2:201 rec c047d2c1  node3:201 rec c047d2c1  node4:201 rec c047d2c1  node5:201 rec c047d2c1  node6:201 rec c047d2c1  node7:201 rec c047d2c1  node8:201 rec c047d2c1  node9:161 rec 58485227  node10:161 rec 58485227  node11:161 rec 58485227  node12:161 rec 58485227  diverged
+[  21.6s] partitioned                node1:201 rec c047d2c1  node2:201 rec c047d2c1  node3:201 rec c047d2c1  node4:201 rec c047d2c1  node5:201 rec c047d2c1  node6:201 rec c047d2c1  node7:201 rec c047d2c1  node8:201 rec c047d2c1  node9:161 rec 58485227  node10:161 rec 58485227  node11:161 rec 58485227  node12:161 rec 58485227  diverged
+[  26.8s] partitioned                node1:201 rec c047d2c1  node2:201 rec c047d2c1  node3:201 rec c047d2c1  node4:201 rec c047d2c1  node5:201 rec c047d2c1  node6:201 rec c047d2c1  node7:201 rec c047d2c1  node8:201 rec c047d2c1  node9:161 rec 58485227  node10:161 rec 58485227  node11:161 rec 58485227  node12:161 rec 58485227  diverged
+[  32.0s] partitioned                node1:201 rec c047d2c1  node2:201 rec c047d2c1  node3:201 rec c047d2c1  node4:201 rec c047d2c1  node5:201 rec c047d2c1  node6:201 rec c047d2c1  node7:201 rec c047d2c1  node8:201 rec c047d2c1  node9:161 rec 58485227  node10:161 rec 58485227  node11:161 rec 58485227  node12:161 rec 58485227  diverged
+[  37.2s] partitioned                node1:201 rec c047d2c1  node2:201 rec c047d2c1  node3:201 rec c047d2c1  node4:201 rec c047d2c1  node5:201 rec c047d2c1  node6:201 rec c047d2c1  node7:201 rec c047d2c1  node8:201 rec c047d2c1  node9:161 rec 58485227  node10:161 rec 58485227  node11:161 rec 58485227  node12:161 rec 58485227  diverged
+[  42.4s] partitioned                node1:201 rec c047d2c1  node2:201 rec c047d2c1  node3:201 rec c047d2c1  node4:201 rec c047d2c1  node5:201 rec c047d2c1  node6:201 rec c047d2c1  node7:201 rec c047d2c1  node8:201 rec c047d2c1  node9:161 rec 58485227  node10:161 rec 58485227  node11:161 rec 58485227  node12:161 rec 58485227  diverged
+
+phase 3: heal the partition
+[  46.1s] healing                    node1:201 rec c047d2c1  node2:201 rec c047d2c1  node3:201 rec c047d2c1  node4:201 rec c047d2c1  node5:201 rec c047d2c1  node6:201 rec c047d2c1  node7:201 rec c047d2c1  node8:201 rec c047d2c1  node9:161 rec 58485227  node10:161 rec 58485227  node11:161 rec 58485227  node12:161 rec 58485227  diverged
+[  47.2s] healing                    node1:241 rec 3052ab99  node2:201 rec c047d2c1  node3:241 rec 3052ab99  node4:241 rec 3052ab99  node5:241 rec 3052ab99  node6:201 rec c047d2c1  node7:241 rec 3052ab99  node8:241 rec 3052ab99  node9:161 rec 58485227  node10:241 rec 3052ab99  node11:241 rec 3052ab99  node12:241 rec 3052ab99  diverged
+[  48.4s] healing                    node1:241 rec 3052ab99  node2:201 rec c047d2c1  node3:241 rec 3052ab99  node4:241 rec 3052ab99  node5:241 rec 3052ab99  node6:201 rec c047d2c1  node7:241 rec 3052ab99  node8:241 rec 3052ab99  node9:161 rec 58485227  node10:241 rec 3052ab99  node11:241 rec 3052ab99  node12:241 rec 3052ab99  diverged
+[  49.5s] healing                    node1:241 rec 3052ab99  node2:241 rec 3052ab99  node3:241 rec 3052ab99  node4:241 rec 3052ab99  node5:241 rec 3052ab99  node6:241 rec 3052ab99  node7:241 rec 3052ab99  node8:241 rec 3052ab99  node9:241 rec 3052ab99  node10:241 rec 3052ab99  node11:241 rec 3052ab99  node12:241 rec 3052ab99  CONVERGED
+-> converged 3.5s after healing
+
+node12 wrote its conflicting case update last, so its version must win everywhere
+case-0001 on every node: {'by': 'node12', 'status': 'approved'}  (identical everywhere: True)
+query records per node: [240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240] (expected 240 each)
+RESULT: PASS - all replicas identical after partition
+  node1: rounds=25 ok=32 failed=18 pulled=1803 pushed=1722
+  node2: rounds=22 ok=31 failed=13 pulled=1563 pushed=1552
+  node3: rounds=24 ok=38 failed=10 pulled=1745 pushed=1784
+  node4: rounds=24 ok=38 failed=10 pulled=1914 pushed=2034
+  node5: rounds=22 ok=36 failed=8 pulled=1854 pushed=2055
+  node6: rounds=25 ok=39 failed=11 pulled=1693 pushed=1682
+  node7: rounds=21 ok=31 failed=11 pulled=1766 pushed=1875
+  node8: rounds=23 ok=37 failed=9 pulled=1684 pushed=1733
+  node9: rounds=26 ok=35 failed=17 pulled=787 pushed=757
+  node10: rounds=24 ok=28 failed=20 pulled=1159 pushed=1209
+  node11: rounds=21 ok=27 failed=15 pulled=879 pushed=908
+  node12: rounds=25 ok=35 failed=15 pulled=1079 pushed=1188

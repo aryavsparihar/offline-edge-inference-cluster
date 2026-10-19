@@ -105,9 +105,7 @@ class Entry:
     @classmethod
     def from_wire(cls, raw: dict[str, Any]) -> Entry:
         """Inverse of :meth:`to_wire`."""
-        return cls(
-            str(raw["c"]), str(raw["k"]), raw.get("v"), bool(raw["d"]), Timestamp.from_list(raw["ts"])
-        )
+        return cls(str(raw["c"]), str(raw["k"]), raw.get("v"), bool(raw["d"]), Timestamp.from_list(raw["ts"]))
 
 
 @dataclass(frozen=True)
@@ -197,8 +195,7 @@ class ReplicatedStore:
 
     def _set_meta(self, key: str, value: str) -> str:
         self._db.execute(
-            "INSERT INTO meta(key, value) VALUES(?, ?) "
-            "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            "INSERT INTO meta(key, value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
             (key, value),
         )
         return value
@@ -306,8 +303,7 @@ class ReplicatedStore:
         """Live records of a collection ordered by key."""
         with self._lock:
             rows = self._db.execute(
-                "SELECT key, value FROM records WHERE collection = ? AND deleted = 0 "
-                "ORDER BY key LIMIT ? OFFSET ?",
+                "SELECT key, value FROM records WHERE collection = ? AND deleted = 0 ORDER BY key LIMIT ? OFFSET ?",
                 (collection, limit, offset),
             ).fetchall()
         return [(k, json.loads(v)) for k, v in rows]
@@ -340,9 +336,7 @@ class ReplicatedStore:
     def counter(self, name: str) -> PNCounter:
         """Full PN-counter state for ``name``."""
         with self._lock:
-            rows = self._db.execute(
-                "SELECT node_id, p, n FROM counters WHERE name = ?", (name,)
-            ).fetchall()
+            rows = self._db.execute("SELECT node_id, p, n FROM counters WHERE name = ?", (name,)).fetchall()
         return PNCounter(GCounter({r[0]: r[1] for r in rows}), GCounter({r[0]: r[2] for r in rows}))
 
     def counter_names(self) -> list[str]:
@@ -366,8 +360,7 @@ class ReplicatedStore:
         """
         with self._lock:
             erows = self._db.execute(
-                "SELECT seq, collection, key, value, deleted, ts, src FROM records "
-                "WHERE seq > ? ORDER BY seq LIMIT ?",
+                "SELECT seq, collection, key, value, deleted, ts, src FROM records WHERE seq > ? ORDER BY seq LIMIT ?",
                 (since, limit),
             ).fetchall()
             crows = self._db.execute(
@@ -391,9 +384,7 @@ class ReplicatedStore:
             upto = merged[-1][1][0] if merged else max(since, self._seq)
             return ChangeBatch(self.store_id, entries, counters, upto, upto < self._seq)
 
-    def apply(
-        self, entries: Iterable[Entry], counters: Iterable[CounterSlot] = (), source: str = "?"
-    ) -> int:
+    def apply(self, entries: Iterable[Entry], counters: Iterable[CounterSlot] = (), source: str = "?") -> int:
         """Merge state received from node ``source``. Returns the number of rows changed."""
         changed = 0
         with self._tx():

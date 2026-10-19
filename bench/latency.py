@@ -23,10 +23,10 @@ is measured, either here or by those scripts.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import platform
-import socket
 import subprocess
 import threading
 import time
@@ -58,7 +58,6 @@ def _read(path: str) -> str | None:
 def hardware_info() -> dict[str, Any]:
     """Describe the machine the benchmark ran on (Pi model, CPU, RAM, governor, temperature)."""
     info: dict[str, Any] = {
-        "hostname": socket.gethostname(),
         "machine": platform.machine(),
         "system": f"{platform.system()} {platform.release()}",
         "python": platform.python_version(),
@@ -76,12 +75,10 @@ def hardware_info() -> dict[str, Any]:
     if "cpu" not in info:
         info["cpu"] = platform.processor() or platform.machine()
         if platform.system() == "Darwin":
-            try:
+            with contextlib.suppress(OSError, subprocess.CalledProcessError):
                 info["cpu"] = subprocess.run(
                     ["sysctl", "-n", "machdep.cpu.brand_string"], capture_output=True, text=True, check=True
                 ).stdout.strip()
-            except (OSError, subprocess.CalledProcessError):
-                pass
     gov = _read("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
     if gov:
         info["cpu_governor"] = gov
@@ -299,6 +296,10 @@ def _load_json(path: str | None) -> dict[str, Any] | None:
     return None
 
 
+def _mb(x: float) -> str:
+    return f"{x:.0f}MB" if x >= 10 else f"{x:.2f}MB"
+
+
 def results_table(res: dict[str, Any]) -> str:
     """Markdown table in the same shape as the project's target table."""
     rows = []
@@ -307,35 +308,66 @@ def results_table(res: dict[str, Any]) -> str:
         by = {r["variant"]: r for r in rep["rows"]}
         fp32, best = by.get("fp32"), by.get("pruned+int8")
         if fp32 and best:
-            rows.append(("Model size", TARGETS["size"],
-                         f"{fp32['size_mb']:.0f}MB fp32 → {best['size_mb']:.0f}MB ({best['size_ratio_vs_fp32']:.2f}x)",
-                         f"ONNX file size on disk, {rep['model']}"))
-            rows.append(("Accuracy", TARGETS["accuracy"],
-                         f"{best['accuracy_retained_pct']:.1f}% retained ({100 * best['accuracy']:.2f}% vs {100 * fp32['accuracy']:.2f}% fp32)",
-                         f"{rep['dataset']} held-out test split (n={best['n_test']})"))
+            rows.append(
+                (
+                    "Model size",
+                    TARGETS["size"],
+                    f"{_mb(fp32['size_mb'])} fp32 → {_mb(best['size_mb'])} ({best['size_ratio_vs_fp32']:.2f}x)",
+                    f"ONNX file size on disk, {rep['model']}",
+                )
+            )
+            rows.append(
+                (
+                    "Accuracy",
+                    TARGETS["accuracy"],
+                    f"{best['accuracy_retained_pct']:.1f}% retained ({100 * best['accuracy']:.2f}% vs {100 * fp32['accuracy']:.2f}% fp32)",
+                    f"{rep['dataset']} test split (n={best['n_test']})",
+                )
+            )
     else:
-        rows.append(("Model size", TARGETS["size"], f"{res['classify']['model_file_mb']:.0f}MB (served file)",
-                     "pass --report for the fp32 comparison"))
+        rows.append(
+            (
+                "Model size",
+                TARGETS["size"],
+                f"{res['classify']['model_file_mb']:.0f}MB (served file)",
+                "pass --report for the fp32 comparison",
+            )
+        )
         rows.append(("Accuracy", TARGETS["accuracy"], "not measured", "pass --report runs/<name>/report.json"))
     c = res["classify"]
-    rows.append(("Classification latency", TARGETS["cls_latency"],
-                 f"p50 {c['p50_ms']:.0f}ms / p95 {c['p95_ms']:.0f}ms (p99 {c['p99_ms']:.0f}ms, {c['throughput_rps']:.2f} req/s, "
-                 f"peak RSS {c.get('rss_peak_mb', float('nan')):.0f}MB)",
-                 f"max_seq_len={res['settings']['max_seq_len']} (padded), batch 1, concurrency {res['settings']['concurrency']}, "
-                 f"{res['settings']['duration_s']}s continuous load, {c['model']}"))
+    rows.append(
+        (
+            "Classification latency",
+            TARGETS["cls_latency"],
+            f"p50 {c['p50_ms']:.0f}ms / p95 {c['p95_ms']:.0f}ms (p99 {c['p99_ms']:.0f}ms, {c['throughput_rps']:.2f} req/s, "
+            f"peak RSS {c.get('rss_peak_mb', float('nan')):.0f}MB)",
+            f"max_seq_len={res['settings']['max_seq_len']} (padded), batch 1, concurrency {res['settings']['concurrency']}, "
+            f"{res['settings']['duration_s']}s continuous load, {c['model']}",
+        )
+    )
     g = res.get("generate")
     if g:
-        rows.append(("Generative latency", TARGETS["gen_latency"],
-                     f"p50 {g['p50_ms'] / 1000:.2f}s / p95 {g['p95_ms'] / 1000:.2f}s (TTFT {g['ttft_p50_ms']:.0f}ms, "
-                     f"{g['decode_ms_per_token_p50']:.0f}ms/token)",
-                     f"one response of exactly {g['new_tokens']} new tokens, greedy, batch 1"))
+        rows.append(
+            (
+                "Generative latency",
+                TARGETS["gen_latency"],
+                f"p50 {g['p50_ms'] / 1000:.2f}s / p95 {g['p95_ms'] / 1000:.2f}s (TTFT {g['ttft_p50_ms']:.0f}ms, "
+                f"{g['decode_ms_per_token_p50']:.0f}ms/token)",
+                f"one response of exactly {g['new_tokens']} new tokens, greedy, batch 1",
+            )
+        )
     else:
         rows.append(("Generative latency", TARGETS["gen_latency"], "not measured", "pass --generator-dir"))
     s = res.get("sync")
     if s:
-        rows.append(("Sync integrity", TARGETS["sync"],
-                     f"{s['identical_pct_at_k']:.2f}% after K={s['k']} windows; 100% after {s['windows_to_100']} windows",
-                     s["settings"]))
+        rows.append(
+            (
+                "Sync integrity",
+                TARGETS["sync"],
+                f"{s['identical_pct_at_k']:.2f}% after K={s['k']} windows; 100% after {s['windows_to_100']} windows",
+                s["settings"],
+            )
+        )
     else:
         rows.append(("Sync integrity", TARGETS["sync"], "not measured", "run `make sim` first"))
     hw = res["hardware"]
@@ -397,7 +429,7 @@ def main() -> None:
     table = results_table(res)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    stem = f"{res['hardware']['hostname']}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    stem = f"bench-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
     (out / f"{stem}.json").write_text(json.dumps(res, indent=2, ensure_ascii=False))
     (out / f"{stem}.md").write_text(table + "\n")
     print(json.dumps({k: res[k] for k in ("classify", "generate") if k in res}, indent=2))

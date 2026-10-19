@@ -34,7 +34,7 @@ LABEL2ID = {lab: i for i, lab in enumerate(LABELS)}
 
 
 @pytest.fixture(scope="module")
-def tokenizer(tmp_path_factory: pytest.TempPathFactory):  # noqa: ANN201
+def tokenizer(tmp_path_factory: pytest.TempPathFactory):
     """A character-level WordPiece vocab built from the sample, as a fast BERT tokenizer."""
     from transformers import BertTokenizerFast
 
@@ -45,10 +45,15 @@ def tokenizer(tmp_path_factory: pytest.TempPathFactory):  # noqa: ANN201
     return BertTokenizerFast(vocab_file=str(path), do_lower_case=False, tokenize_chinese_chars=False)
 
 
-def tiny_model(kind: str, vocab_size: int):  # noqa: ANN201
+def tiny_model(kind: str, vocab_size: int):
     common = dict(
-        vocab_size=vocab_size, hidden_size=32, num_hidden_layers=2, num_attention_heads=4,
-        intermediate_size=64, max_position_embeddings=128, num_labels=len(LABELS),
+        vocab_size=vocab_size,
+        hidden_size=32,
+        num_hidden_layers=2,
+        num_attention_heads=4,
+        intermediate_size=64,
+        max_position_embeddings=128,
+        num_labels=len(LABELS),
     )
     if kind == "bert":
         cfg = transformers.BertConfig(**common)
@@ -61,11 +66,11 @@ def tiny_model(kind: str, vocab_size: int):  # noqa: ANN201
 
 
 @pytest.mark.parametrize("kind", ["bert", "xlm-roberta", "albert"])
-def test_importance_prune_export_quantize(kind: str, tokenizer, tmp_path: Path) -> None:  # noqa: ANN001
+def test_importance_prune_export_quantize(kind: str, tokenizer, tmp_path: Path) -> None:
     model = tiny_model(kind, tokenizer.vocab_size)
     device = torch.device("cpu")
     head_imp, neuron_imp = compute_importance(model, tokenizer, EXAMPLES, LABEL2ID, 32, device, batch_size=16)
-    attn_units, ffn_units = find_units(model)
+    attn_units, _ = find_units(model)
     expected_units = 1 if kind == "albert" else 2  # ALBERT shares one block across layers
     assert len(attn_units) == len(head_imp) == expected_units
     assert all(v.shape == (4,) and torch.isfinite(v).all() and v.sum() > 0 for v in head_imp.values())

@@ -8,14 +8,44 @@ embedding table, which is 69% of XLM-R's parameters) are quantized.
 
 from __future__ import annotations
 
+import logging
+import os
 import tempfile
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
 from pathlib import Path
 
 from onnxruntime.quantization import QuantType, quantize_dynamic
 from onnxruntime.quantization.shape_inference import quant_pre_process
 
 DEFAULT_OPS = ("MatMul", "Gather")
+log = logging.getLogger(__name__)
+
+
+@contextmanager
+def _working_dir(path: str | Path) -> Iterator[None]:
+    """Temporarily chdir. ONNX tooling writes ``<uuid>.data`` scratch files into the CWD."""
+    old = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(old)
+
+
+def preprocess_model(src: Path, dst: Path) -> None:
+    """ORT's quantization pre-processing (shape inference + optimization).
+
+    Symbolic shape inference sometimes can't resolve every dimension in
+    exported graphs (``Incomplete symbolic shape inference``). In that case
+    fall back to standard ONNX shape inference, which is sufficient for
+    dynamic quantization.
+    """
+    try:
+        quant_pre_process(str(src), str(dst), skip_symbolic_shape=False)
+    except Exception as exc:  # ORT raises a bare Exception here
+        log.warning("symbolic shape inference failed (%s); using ONNX shape inference", exc)
+        quant_pre_process(str(src), str(dst), skip_symbolic_shape=True)
 
 
 def quantize_int8(
@@ -37,13 +67,13 @@ def quantize_int8(
         preprocess: Run ORT's recommended pre-processing (symbolic shape
             inference + graph optimization) first.
     """
-    src, dst = Path(src), Path(dst)
+    src, dst = Path(src).resolve(), Path(dst).resolve()
     dst.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory() as tmp:
+    with tempfile.TemporaryDirectory() as tmp, _working_dir(tmp):
         model_in = src
         if preprocess:
             model_in = Path(tmp) / "preprocessed.onnx"
-            quant_pre_process(str(src), str(model_in), skip_symbolic_shape=False)
+            preprocess_model(src, model_in)
         quantize_dynamic(
             str(model_in),
             str(dst),

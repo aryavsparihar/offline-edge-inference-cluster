@@ -114,7 +114,10 @@ def train(
     model.to(device)
     no_decay = ("bias", "LayerNorm.weight", "layer_norm.weight", "LayerNorm.bias")
     params = [
-        {"params": [p for n, p in model.named_parameters() if not n.endswith(no_decay)], "weight_decay": cfg.weight_decay},
+        {
+            "params": [p for n, p in model.named_parameters() if not n.endswith(no_decay)],
+            "weight_decay": cfg.weight_decay,
+        },
         {"params": [p for n, p in model.named_parameters() if n.endswith(no_decay)], "weight_decay": 0.0},
     ]
     optim = torch.optim.AdamW(params, lr=cfg.lr)

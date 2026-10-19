@@ -1,7 +1,7 @@
 """Poll nodes' ``/sync/digest`` and print convergence status until all match.
 
-    python -m sim.watch --nodes 12 --base-port 8000      # docker-compose cluster
-    python -m sim.watch --urls http://127.0.0.1:8101 http://127.0.0.1:8102
+python -m sim.watch --nodes 12 --base-port 8000      # docker-compose cluster
+python -m sim.watch --urls http://127.0.0.1:8101 http://127.0.0.1:8102
 """
 
 from __future__ import annotations
@@ -35,8 +35,10 @@ def main() -> None:
                 rows.append((u, -1, "down"))
         digests = {r[2] for r in rows if r[1] >= 0}
         groups = len(digests)
-        print(f"[{time.time() - t0:6.1f}s] {len(rows)} nodes, {groups} distinct state(s): "
-              + " ".join(f"{n}={c}" for n, c, _ in rows))
+        print(
+            f"[{time.time() - t0:6.1f}s] {len(rows)} nodes, {groups} distinct state(s): "
+            + " ".join(f"{n}={c}" for n, c, _ in rows)
+        )
         if args.until_converged and groups == 1 and all(r[1] >= 0 for r in rows):
             print("converged: all replicas identical")
             return

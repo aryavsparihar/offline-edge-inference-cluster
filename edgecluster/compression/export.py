@@ -53,11 +53,17 @@ def export_onnx(
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     model = model.cpu().eval()
-    enc = tokenizer(list(sample_texts[:2]) or ["test"], truncation=True, max_length=max_seq_len, padding=True, return_tensors="pt")
+    enc = tokenizer(
+        list(sample_texts[:2]) or ["test"], truncation=True, max_length=max_seq_len, padding=True, return_tensors="pt"
+    )
     args = (enc["input_ids"], enc["attention_mask"])
+    # The wrapper must be in eval mode too: the exporter restores the wrapper's
+    # original training flag afterwards, and a fresh Module defaults to train(),
+    # which would silently re-enable dropout in ``model``.
+    wrapper = _LogitsOnly(model).eval()
     with torch.no_grad():
         torch.onnx.export(
-            _LogitsOnly(model),
+            wrapper,
             args,
             str(out_path),
             input_names=["input_ids", "attention_mask"],
@@ -78,6 +84,7 @@ def verify_onnx(
     model: nn.Module, tokenizer: Any, onnx_path: str | Path, max_seq_len: int, texts: Sequence[str]
 ) -> dict[str, float]:
     """Max |logit difference| and argmax agreement between PyTorch and ORT."""
+    model.eval()
     sess = make_session(onnx_path, intra_op_threads=0)
     enc = tokenizer(list(texts), truncation=True, max_length=max_seq_len, padding=True, return_tensors="pt")
     with torch.no_grad():

@@ -1,7 +1,7 @@
 # XLM-RoBERTa base (278M params, ~1.1 GB fp32 ONNX) on IndicGLUE bbca.hi (BBC Hindi topic classification).
 # This is the model whose fp32 size matches the original project's 1.1 GB figure.
 name: xlmr-bbca
-base_model: xlm-roberta-base
+base_model: FacebookAI/xlm-roberta-base
 dataset:
   kind: indic_glue
   config: bbca.hi
@@ -15,7 +15,7 @@ finetune:
 pruning:
   head_ratio: 0.3          # fraction of all 144 heads removed (global ranking)
   ffn_ratio: 0.2           # fraction of FFN neurons removed per layer
-  importance_examples: 347  # whole validation split
+  importance_examples: 346  # whole validation split
   recovery_epochs: 1
   recovery_lr: 2.0e-5
 quantization:

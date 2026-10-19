@@ -1,0 +1,10 @@
+# Workstation: fine-tuning, pruning, ONNX export, quantization.
+-r runtime.in
+torch==2.14.1
+# 4.57.x is the last series with model.prune_heads (removed in transformers 5).
+transformers==4.57.6
+onnx==1.23.2
+datasets==5.0.1
+safetensors==0.8.0
+sentencepiece==0.2.2
+protobuf==7.36.2

@@ -22,7 +22,6 @@ simulator provides an in-process transport with injected faults.
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 

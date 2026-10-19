@@ -73,7 +73,10 @@ class PruneSpec:
 
     def to_json(self) -> dict[str, Any]:
         """Serialisable form."""
-        return {"heads": {str(k): v for k, v in self.heads.items()}, "ffn_keep": {str(k): v for k, v in self.ffn_keep.items()}}
+        return {
+            "heads": {str(k): v for k, v in self.heads.items()},
+            "ffn_keep": {str(k): v for k, v in self.ffn_keep.items()},
+        }
 
     @classmethod
     def from_json(cls, raw: dict[str, Any]) -> PruneSpec:
@@ -103,8 +106,8 @@ def find_units(model: nn.Module) -> tuple[list[AttentionUnit], list[FfnUnit]]:
                 ffn.append(FfnUnit(key, layer.ffn, layer.ffn, layer.ffn_output))
         return attn, ffn
     layers = base.encoder.layer
-    attn = [AttentionUnit(i, l.attention.self, l.attention.output.dense) for i, l in enumerate(layers)]
-    ffn = [FfnUnit(i, l.intermediate, l.intermediate.dense, l.output.dense) for i, l in enumerate(layers)]
+    attn = [AttentionUnit(i, lay.attention.self, lay.attention.output.dense) for i, lay in enumerate(layers)]
+    ffn = [FfnUnit(i, lay.intermediate, lay.intermediate.dense, lay.output.dense) for i, lay in enumerate(layers)]
     return attn, ffn
 
 
@@ -126,7 +129,7 @@ def compute_importance(
     acts: dict[int, list[torch.Tensor]] = {u.key: [] for u in ffn_units}
     handles = []
 
-    def gate_hook(unit: AttentionUnit):  # noqa: ANN202
+    def gate_hook(unit: AttentionUnit):
         def hook(_mod: nn.Module, args: tuple[torch.Tensor, ...]) -> tuple[torch.Tensor, ...]:
             ctx = args[0]
             b, t, _ = ctx.shape
@@ -135,7 +138,7 @@ def compute_importance(
 
         return hook
 
-    def act_hook(unit: FfnUnit):  # noqa: ANN202
+    def act_hook(unit: FfnUnit):
         def hook(_mod: nn.Module, _args: Any, out: torch.Tensor) -> torch.Tensor:
             out.retain_grad()
             acts[unit.key].append(out)
@@ -150,7 +153,7 @@ def compute_importance(
         if is_albert:
             # ALBERT applies the activation inside AlbertLayer.ff_chunk, after ``ffn``.
             # Score the input of ``ffn_output`` (post-activation) instead.
-            def pre(unit: FfnUnit):  # noqa: ANN202
+            def pre(unit: FfnUnit):
                 def hook(_mod: nn.Module, args: tuple[torch.Tensor, ...]) -> None:
                     a = args[0]
                     a.retain_grad()
@@ -190,7 +193,7 @@ def compute_importance(
 def select_heads(head_imp: dict[int, torch.Tensor], ratio: float, min_heads: int = 1) -> dict[int, list[int]]:
     """Globally remove the ``ratio`` least important heads, keeping ``min_heads`` per block."""
     flat = sorted((float(s), k, h) for k, v in head_imp.items() for h, s in enumerate(v))
-    budget = int(round(ratio * len(flat)))
+    budget = round(ratio * len(flat))
     remaining = {k: len(v) for k, v in head_imp.items()}
     pruned: dict[int, list[int]] = {}
     for _, k, h in flat:
@@ -281,7 +284,7 @@ def prune_ffn(model: nn.Module, neuron_imp: dict[int, torch.Tensor], ratio: floa
     kept: dict[int, int] = {}
     for unit in ffn_units:
         scores = neuron_imp[unit.key]
-        n_keep = max(1, int(round(scores.numel() * (1 - ratio))))
+        n_keep = max(1, round(scores.numel() * (1 - ratio)))
         keep = torch.sort(torch.topk(scores, n_keep).indices).values
         _replace_ffn(model, unit.key, _slice_linear(unit.up, keep, 0), _slice_linear(unit.down, keep, 1))
         kept[unit.key] = n_keep

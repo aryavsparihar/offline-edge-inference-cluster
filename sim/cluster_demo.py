@@ -35,8 +35,16 @@ import httpx
 import yaml
 
 
-def write_config(path: Path, n: int, base_port: int, data_dir: Path, period: float, window: float,
-                 interval: float, model_dir: str | None) -> None:
+def write_config(
+    path: Path,
+    n: int,
+    base_port: int,
+    data_dir: Path,
+    period: float,
+    window: float,
+    interval: float,
+    model_dir: str | None,
+) -> None:
     """Shared cluster config used by every node process."""
     cfg: dict[str, Any] = {
         "cluster": {
@@ -60,8 +68,19 @@ def start_nodes(n: int, base_port: int, config: Path, log_dir: Path) -> list[sub
         log = open(log_dir / f"node{i}.log", "wb")  # noqa: SIM115 - closed with the process
         procs.append(
             subprocess.Popen(
-                [sys.executable, "-m", "edgecluster.serving", "--config", str(config),
-                 "--node-id", f"node{i}", "--port", str(base_port + i), "--log-level", "warning"],
+                [
+                    sys.executable,
+                    "-m",
+                    "edgecluster.serving",
+                    "--config",
+                    str(config),
+                    "--node-id",
+                    f"node{i}",
+                    "--port",
+                    str(base_port + i),
+                    "--log-level",
+                    "warning",
+                ],
                 stdout=log,
                 stderr=subprocess.STDOUT,
                 env={**os.environ, "PYTHONUNBUFFERED": "1"},
@@ -121,6 +140,13 @@ def main() -> None:
     ap.add_argument("--partition-seconds", type=float, default=25.0)
     ap.add_argument("--model-dir", help="optional ONNX classifier dir to also serve /classify")
     ap.add_argument("--workdir", help="keep node data/logs here (default: temp dir)")
+    ap.add_argument("--minority", type=int, default=1, help="nodes on the small side of the partition")
+    ap.add_argument(
+        "--attach",
+        action="store_true",
+        help="don't start processes; drive an already running cluster on base-port+1..base-port+N "
+        "(e.g. the docker-compose cluster: --attach --base-port 8000 --nodes 12)",
+    )
     args = ap.parse_args()
     n = args.nodes
     work = Path(args.workdir or tempfile.mkdtemp(prefix="edge-cluster-"))
@@ -128,8 +154,12 @@ def main() -> None:
     config = work / "cluster.yaml"
     write_config(config, n, args.base_port, work / "data", args.period, args.window, args.interval, args.model_dir)
     urls = [f"http://127.0.0.1:{args.base_port + i}" for i in range(1, n + 1)]
-    print(f"starting {n} nodes (logs in {work}); uplink window {args.window:.0f}s every {args.period:.0f}s")
-    procs = start_nodes(n, args.base_port, config, work)
+    if args.attach:
+        print(f"attaching to {n} running nodes on ports {args.base_port + 1}..{args.base_port + n}")
+        procs = []
+    else:
+        print(f"starting {n} nodes (logs in {work}); uplink window {args.window:.0f}s every {args.period:.0f}s")
+        procs = start_nodes(n, args.base_port, config, work)
     client = httpx.Client(timeout=5)
     t0 = time.time()
     try:
@@ -139,23 +169,34 @@ def main() -> None:
         print("phase 1: every node writes records locally")
         for i, u in enumerate(urls, 1):
             for j in range(args.records):
-                client.post(f"{u}/records/queries", json={"key": f"q-node{i}-{j}", "value": {"label": "pension", "node": i}})
+                client.post(
+                    f"{u}/records/queries", json={"key": f"q-node{i}-{j}", "value": {"label": "pension", "node": i}}
+                )
             client.post(f"{u}/records/cases", json={"key": "case-0001", "value": {"status": "open", "by": f"node{i}"}})
         took = wait_converged(client, urls, t0, "phase 1 sync", 120)
         print(f"-> converged {took:.1f}s after the writes\n")
 
-        minority = [f"node{n}"]
-        majority = [f"node{i}" for i in range(1, n)]
-        print(f"phase 2: partition {majority} | {minority} for {args.partition_seconds:.0f}s, conflicting writes on both sides")
+        minority = [f"node{i}" for i in range(n - args.minority + 1, n + 1)]
+        majority = [f"node{i}" for i in range(1, n - args.minority + 1)]
+        print(
+            f"phase 2: partition {majority} | {minority} for {args.partition_seconds:.0f}s, conflicting writes on both sides"
+        )
         for i, u in enumerate(urls, 1):
             me = f"node{i}"
             client.post(f"{u}/admin/links", json={"blocked": minority if me in majority else majority})
-        client.post(f"{urls[0]}/records/cases", json={"key": "case-0001", "value": {"status": "documents_pending", "by": "node1"}})
+        client.post(
+            f"{urls[0]}/records/cases",
+            json={"key": "case-0001", "value": {"status": "documents_pending", "by": "node1"}},
+        )
         time.sleep(0.05)
-        client.post(f"{urls[-1]}/records/cases", json={"key": "case-0001", "value": {"status": "approved", "by": f"node{n}"}})
+        client.post(
+            f"{urls[-1]}/records/cases", json={"key": "case-0001", "value": {"status": "approved", "by": f"node{n}"}}
+        )
         for i, u in enumerate(urls, 1):
             for j in range(args.records):
-                client.post(f"{u}/records/queries", json={"key": f"p-node{i}-{j}", "value": {"label": "housing", "node": i}})
+                client.post(
+                    f"{u}/records/queries", json={"key": f"p-node{i}-{j}", "value": {"label": "housing", "node": i}}
+                )
         end = time.time() + args.partition_seconds
         while time.time() < end:
             show("partitioned", digests(client, urls), t0)
@@ -166,6 +207,7 @@ def main() -> None:
         took = wait_converged(client, urls, t0, "healing", 180)
         print(f"-> converged {took:.1f}s after healing\n")
 
+        print(f"node{n} wrote its conflicting case update last, so its version must win everywhere")
         cases = [client.get(f"{u}/records/cases/case-0001").json()["value"] for u in urls]
         counts = [client.get(f"{u}/records/queries", params={"limit": 1}).json()["total"] for u in urls]
         expected = n * args.records * 2
@@ -175,8 +217,10 @@ def main() -> None:
         print("RESULT:", "PASS - all replicas identical after partition" if ok else "FAIL")
         stats = [client.get(f"{u}/cluster").json()["stats"] for u in urls]
         for i, s in enumerate(stats, 1):
-            print(f"  node{i}: rounds={s['rounds']} ok={s['exchanges_ok']} failed={s['exchanges_failed']} "
-                  f"pulled={s['entries_pulled']} pushed={s['entries_pushed']}")
+            print(
+                f"  node{i}: rounds={s['rounds']} ok={s['exchanges_ok']} failed={s['exchanges_failed']} "
+                f"pulled={s['entries_pulled']} pushed={s['entries_pushed']}"
+            )
         if not ok:
             sys.exit(1)
     finally:

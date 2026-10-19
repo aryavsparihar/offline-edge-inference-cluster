@@ -52,11 +52,7 @@ class Generation:
 
 def chatml_prompt(system: str, user: str) -> str:
     """Qwen2.5 chat template (ChatML) for a single-turn conversation."""
-    return (
-        f"<|im_start|>system\n{system}<|im_end|>\n"
-        f"<|im_start|>user\n{user}<|im_end|>\n"
-        "<|im_start|>assistant\n"
-    )
+    return f"<|im_start|>system\n{system}<|im_end|>\n<|im_start|>user\n{user}<|im_end|>\n<|im_start|>assistant\n"
 
 
 class OnnxGenerator:

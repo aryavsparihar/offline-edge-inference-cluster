@@ -60,8 +60,10 @@ def test_lossy_links_eventually_converge(tmp_path: Path) -> None:
         for i in range(25):
             stores[n].put("cases", f"case-{rng.randrange(20)}", {"by": n, "i": i})
             stores[n].put("queries", f"{n}-{i}", {"i": i})
-    engines = {n: AntiEntropy(stores[n], DirectTransport(services, loss=0.4, seed=i), page_size=10, retries=0)
-               for i, n in enumerate(names)}
+    engines = {
+        n: AntiEntropy(stores[n], DirectTransport(services, loss=0.4, seed=i), page_size=10, retries=0)
+        for i, n in enumerate(names)
+    }
     for _ in range(300):
         a, b = rng.sample(names, 2)
         engines[a].exchange(b)

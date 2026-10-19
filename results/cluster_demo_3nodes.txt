@@ -1,0 +1,31 @@
+starting 3 nodes (logs in runs/cluster-demo); uplink window 12s every 20s
+all nodes healthy
+
+phase 1: every node writes records locally
+[   2.4s] phase 1 sync               node1: 21 rec b8223e72  node2: 21 rec 57d0b2d1  node3: 21 rec 5e7f48e4  diverged
+[   3.4s] phase 1 sync               node1: 21 rec b8223e72  node2: 21 rec 57d0b2d1  node3: 21 rec 5e7f48e4  diverged
+[   4.4s] phase 1 sync               node1: 21 rec b8223e72  node2: 21 rec 57d0b2d1  node3: 21 rec 5e7f48e4  diverged
+[   5.5s] phase 1 sync               node1: 21 rec b8223e72  node2: 21 rec 57d0b2d1  node3: 21 rec 5e7f48e4  diverged
+[   6.5s] phase 1 sync               node1: 21 rec b8223e72  node2: 21 rec 57d0b2d1  node3: 21 rec 5e7f48e4  diverged
+[   7.5s] phase 1 sync               node1: 21 rec b8223e72  node2: 21 rec 57d0b2d1  node3: 21 rec 5e7f48e4  diverged
+[   8.5s] phase 1 sync               node1: 61 rec 72965f82  node2: 61 rec 72965f82  node3: 61 rec 72965f82  CONVERGED
+-> converged 6.1s after the writes
+
+phase 2: partition ['node1', 'node2'] | ['node3'] for 25s, conflicting writes on both sides
+[   8.7s] partitioned                node1: 81 rec 1620d34b  node2: 81 rec dfb4980b  node3: 81 rec c8287b88  diverged
+[  13.7s] partitioned                node1:101 rec d5a85210  node2:101 rec d5a85210  node3: 81 rec c8287b88  diverged
+[  18.7s] partitioned                node1:101 rec d5a85210  node2:101 rec d5a85210  node3: 81 rec c8287b88  diverged
+[  23.7s] partitioned                node1:101 rec d5a85210  node2:101 rec d5a85210  node3: 81 rec c8287b88  diverged
+[  28.7s] partitioned                node1:101 rec d5a85210  node2:101 rec d5a85210  node3: 81 rec c8287b88  diverged
+
+phase 3: heal the partition
+[  33.7s] healing                    node1:101 rec d5a85210  node2:101 rec d5a85210  node3: 81 rec c8287b88  diverged
+[  34.7s] healing                    node1:121 rec a87b5a84  node2:121 rec a87b5a84  node3:121 rec a87b5a84  CONVERGED
+-> converged 1.0s after healing
+
+case-0001 on every node: {'by': 'node3', 'status': 'approved'}  (identical everywhere: True)
+query records per node: [120, 120, 120] (expected 120 each)
+RESULT: PASS - all replicas identical after partition
+  node1: rounds=19 ok=21 failed=17 pulled=164 pushed=204
+  node2: rounds=19 ok=21 failed=17 pulled=225 pushed=203
+  node3: rounds=19 ok=4 failed=34 pulled=184 pushed=204
